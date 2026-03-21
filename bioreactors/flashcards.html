@@ -23,188 +23,93 @@
         .container { width: 95%; max-width: 600px; text-align: center; }
         
         #topic-title-main { color: var(--primary); margin-bottom: 15px; font-size: 1.8rem; }
-
         .score-counter { background: white; padding: 12px 25px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; font-weight: bold; color: var(--primary); font-size: 1.1rem; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 8px; }
         .score-counter span { color: var(--success); font-size: 1.3rem; }
-
         #progress-bar-container { width: 100%; background: #e2e8f0; border-radius: 10px; height: 12px; margin-bottom: 25px; overflow: hidden; border: 1px solid #cbd5e1; }
         #progress-bar { width: 0%; height: 100%; background: var(--success); transition: width 0.5s ease; }
 
-        .mode-selector { margin-bottom: 25px; background: #e2e8f0; padding: 6px; border-radius: 14px; display: inline-flex; gap: 6px; }
-        .mode-btn { padding: 9px 20px; border: none; border-radius: 11px; cursor: pointer; background: transparent; font-weight: bold; transition: 0.3s; color: #64748b; }
-        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-        .card-wrapper { perspective: 1000px; height: 340px; cursor: pointer; margin-bottom: 30px; width: 100%; position: relative; }
+        .card-wrapper { perspective: 1000px; height: 380px; cursor: pointer; margin-bottom: 30px; width: 100%; position: relative; }
         .card { position: relative; width: 100%; height: 100%; transition: transform 0.6s, opacity 0.5s, left 0.5s; transform-style: preserve-3d; box-shadow: 0 12px 35px rgba(0,0,0,0.1); border-radius: 20px; left: 0; }
         .card.flipped { transform: rotateY(180deg); }
         
-        /* אנימציות */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
+        /* שינוי קריטי: פריסה מלמעלה למטה וריווח בין שורות */
+        .card-face { 
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
+            display: flex; flex-direction: column; /* מסדר תוכן לאורך */
+            align-items: center; justify-content: center; 
+            padding: 35px; box-sizing: border-box; border-radius: 20px; 
+            font-size: 1.4rem; border: 1px solid #e2e8f0; overflow-y: auto;
+            line-height: 1.6; /* מוסיף ריווח בין שורות טקסט */
         }
-        .shake { animation: shake 0.4s ease-in-out; }
-        .slide-out { left: 100vw !important; opacity: 0 !important; }
+        
+        /* הוספת ריווח מסביב למשוואות */
+        mjx-container { 
+            margin: 15px 0 !important; 
+            display: block !important;
+            font-size: 115% !important;
+        }
 
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 35px; box-sizing: border-box; border-radius: 20px; font-size: 1.5rem; border: 1px solid #e2e8f0; overflow-y: auto; }
-        .card-front { background-color: var(--card-front-bg); color: #333; }
-        .card-back { transform: rotateY(180deg); background-color: var(--card-back-bg); color: var(--primary); border-color: var(--success); }
+        .card-front { background-color: var(--pink-bg); color: #333; }
+        .card-back { transform: rotateY(180deg); background-color: var(--green-bg); color: var(--primary); border-color: var(--success); }
 
         .btn-row { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
         .btn { padding: 15px 30px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.1rem; min-width: 150px; }
         .btn-nav { background: var(--primary); }
         .btn-success { background: var(--success); }
         .btn-error { background: var(--error); }
-        .btn:disabled { opacity: 0.3; }
-
-        .congrats { display: none; background: white; padding: 60px; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); }
+        
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+        .slide-out { left: 100vw !important; opacity: 0 !important; }
         footer { margin-top: auto; padding: 20px; font-size: 0.85rem; color: #94a3b8; }
     </style>
 </head>
 <body>
-
 <div class="container" id="quiz-area">
     <div class="score-counter" id="score-display">הצלחת <span>0</span> מתוך 0</div>
     <h1 id="topic-title-main">טוען...</h1>
-    
-    <div class="mode-selector">
-        <button class="mode-btn" id="browseModeBtn" onclick="setMode('browse')">מצב עיון</button>
-        <button class="mode-btn active" id="practiceModeBtn" onclick="setMode('practice')">מצב תרגול</button>
-    </div>
-
     <div id="progress-bar-container"><div id="progress-bar"></div></div>
-
-    <div class="card-wrapper">
-        <div id="card" class="card" onclick="flipCard()">
-            <div class="card-face card-front" id="frontText"></div>
-            <div class="card-face card-back" id="backText"></div>
-        </div>
-    </div>
-
-    <div class="btn-row" id="nav-controls" style="display: none;">
-        <button class="btn btn-nav" id="prevBtn" onclick="navigate(-1)">קודם</button>
-        <button class="btn btn-nav" id="nextBtn" onclick="navigate(1)">הבא</button>
-    </div>
-
-    <div class="btn-row" id="feedback-controls">
-        <button class="btn btn-error" onclick="handleResult(false)">❌ טעיתי</button>
-        <button class="btn btn-success" onclick="handleResult(true)">✅ הצלחתי!</button>
-    </div>
+    <div class="card-wrapper"><div id="card" class="card" onclick="flipCard()"><div class="card-face card-front" id="frontText"></div><div class="card-face card-back" id="backText"></div></div></div>
+    <div class="btn-row" id="feedback-controls"><button class="btn btn-error" onclick="handleResult(false)">❌ טעיתי</button><button class="btn btn-success" onclick="handleResult(true)">✅ הצלחתי!</button></div>
 </div>
-
-<div class="container congrats" id="finish-area">
-    <h1 style="font-size: 4rem;">🏆</h1>
-    <h2>כל הכבוד!</h2>
-    <p>סיימת את כל הכרטיסיות בסשן הזה.</p>
-    <button class="btn btn-nav" onclick="location.reload()">תרגול חוזר</button>
-</div>
-
-<footer>&copy; 2026 ד"ר ענבל צרפתי-ברעד | הקבצים שלי</footer>
-
+<div class="container congrats" id="finish-area"><h1>🏆</h1><h2>כל הכבוד!</h2><p>סיימת את כל הכרטיסיות בסשן הזה.</p><button class="btn btn-nav" onclick="location.reload()">תרגול חוזר</button></div>
 <script>
-    let masterList = [];
-    let activePool = [];
-    let currentIndex = 0;
-    let currentMode = 'practice';
-    let isAnimating = false;
-
+    let masterList = [], activePool = [], currentIndex = 0, isAnimating = false;
     async function loadData() {
         const params = new URLSearchParams(window.location.search);
         const topic = params.get('topic') || 'basic_kinetics';
         try {
             const response = await fetch(`./${topic}.json`);
             const data = await response.json();
-            
-            // בדיקה אם יש כותרת בתוך ה-JSON
-            if (data.quizTitle) {
-                masterList = data.cards;
-                document.getElementById('topic-title-main').innerText = data.quizTitle;
-            } else {
-                masterList = data; // תמיכה במבנה הישן
-                document.getElementById('topic-title-main').innerText = topic.replace('_', ' ');
-            }
-            
-            setMode('practice');
-        } catch (e) {
-            document.getElementById('frontText').innerText = "שגיאה בטעינת הקובץ.";
-        }
+            masterList = data.cards || data;
+            document.getElementById('topic-title-main').innerText = data.quizTitle || topic.replace('_', ' ');
+            activePool = [...masterList]; shuffle(activePool); showCard();
+        } catch (e) { document.getElementById('frontText').innerText = "שגיאה בטעינת הקובץ."; }
     }
-
-    function setMode(mode) {
-        currentMode = mode;
-        currentIndex = 0;
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(mode + 'ModeBtn').classList.add('active');
-        activePool = [...masterList];
-        
-        if (mode === 'browse') {
-            document.getElementById('nav-controls').style.display = 'flex';
-            document.getElementById('feedback-controls').style.display = 'none';
-            document.getElementById('progress-bar-container').style.display = 'none';
-            document.getElementById('score-display').style.visibility = 'hidden';
-        } else {
-            shuffle(activePool);
-            document.getElementById('nav-controls').style.display = 'none';
-            document.getElementById('feedback-controls').style.display = 'flex';
-            document.getElementById('progress-bar-container').style.display = 'block';
-            document.getElementById('score-display').style.visibility = 'visible';
-            updateProgressBar();
-        }
-        showCard();
-    }
-
     function showCard() {
-        if (activePool.length === 0 && currentMode === 'practice') {
-            document.getElementById('quiz-area').style.display = 'none';
-            document.getElementById('finish-area').style.display = 'block';
-            return;
-        }
-        document.getElementById('card').classList.remove('flipped');
+        if (activePool.length === 0) { document.getElementById('quiz-area').style.display = 'none'; document.getElementById('finish-area').style.display = 'block'; return; }
+        const card = document.getElementById('card');
+        card.classList.remove('flipped');
         document.getElementById('frontText').innerHTML = activePool[currentIndex].q;
         document.getElementById('backText').innerHTML = activePool[currentIndex].a;
-        
-        if (currentMode === 'practice') {
-            document.getElementById('score-display').innerHTML = `הצלחת <span>${masterList.length - activePool.length}</span> מתוך ${masterList.length}`;
-        }
-        if (window.MathJax) MathJax.typesetPromise();
-    }
-
-    function handleResult(isSuccess) {
-        if (isAnimating) return;
-        isAnimating = true;
-        const card = document.getElementById('card');
-
-        if (isSuccess) {
-            card.classList.add('slide-out');
-            setTimeout(() => {
-                activePool.splice(currentIndex, 1);
-                if (currentIndex >= activePool.length) currentIndex = 0;
-                card.classList.remove('slide-out');
-                showCard();
-                updateProgressBar();
-                isAnimating = false;
-            }, 500);
-        } else {
-            card.classList.add('shake');
-            setTimeout(() => {
-                card.classList.remove('shake');
-                currentIndex = (currentIndex + 1) % activePool.length;
-                showCard();
-                isAnimating = false;
-            }, 400);
-        }
-    }
-
-    function updateProgressBar() {
+        document.getElementById('score-display').innerHTML = `הצלחת <span>${masterList.length - activePool.length}</span> מתוך ${masterList.length}`;
         const percent = ((masterList.length - activePool.length) / masterList.length) * 100;
         document.getElementById('progress-bar').style.width = percent + '%';
+        if (window.MathJax) MathJax.typesetPromise();
     }
-
-    function navigate(step) { currentIndex = (currentIndex + step + activePool.length) % activePool.length; showCard(); }
+    function handleResult(isSuccess) {
+        if (isAnimating) return; isAnimating = true;
+        const card = document.getElementById('card');
+        if (isSuccess) {
+            card.classList.add('slide-out');
+            setTimeout(() => { activePool.splice(currentIndex, 1); if (currentIndex >= activePool.length) currentIndex = 0; card.classList.remove('slide-out'); showCard(); isAnimating = false; }, 500);
+        } else {
+            card.classList.add('shake');
+            setTimeout(() => { card.classList.remove('shake'); currentIndex = (currentIndex + 1) % activePool.length; showCard(); isAnimating = false; }, 400);
+        }
+    }
     function flipCard() { if(!isAnimating) document.getElementById('card').classList.toggle('flipped'); }
     function shuffle(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
-    
     window.onload = loadData;
 </script>
 </body>
