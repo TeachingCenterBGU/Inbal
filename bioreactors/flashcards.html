@@ -20,35 +20,52 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <style>
-        :root { --primary: #1a3c5e; --success: #10b981; --error: #ef4444; --bg: #f4f7f9; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        :root { 
+            --primary: #1a3c5e; 
+            --success: #10b981; 
+            --error: #ef4444; 
+            --bg: #f4f7f9;
+            /* הגדרת הצבעים החדשים للכרטיסיות */
+            --card-front-bg: #fff5f7; /* ורדרד-אפרסקי בהיר מאוד */
+            --card-back-bg: #f0fdf4;  /* ירקרק-מנטה בהיר מאוד */
+        }
+        
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .container { width: 95%; max-width: 600px; text-align: center; }
         
         /* מונה הצלחות עליון */
-        .score-counter { background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; font-weight: bold; color: var(--primary); font-size: 1.1rem; border: 1px solid #e2e8f0; }
-        .score-counter span { color: var(--success); }
+        .score-counter { background: white; padding: 12px 25px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; font-weight: bold; color: var(--primary); font-size: 1.1rem; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 8px; }
+        .score-counter span { color: var(--success); font-size: 1.3rem; }
 
-        .mode-selector { margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 12px; display: inline-flex; gap: 5px; }
-        .mode-btn { padding: 8px 18px; border: none; border-radius: 10px; cursor: pointer; background: transparent; font-weight: bold; transition: 0.3s; }
-        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .mode-selector { margin-bottom: 25px; background: #e2e8f0; padding: 6px; border-radius: 14px; display: inline-flex; gap: 6px; }
+        .mode-btn { padding: 9px 20px; border: none; border-radius: 11px; cursor: pointer; background: transparent; font-weight: bold; transition: 0.3s; color: #64748b; }
+        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        .card-wrapper { perspective: 1000px; height: 320px; cursor: pointer; margin-bottom: 25px; width: 100%; }
-        .card { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 20px; }
+        .card-wrapper { perspective: 1000px; height: 340px; cursor: pointer; margin-bottom: 30px; width: 100%; }
+        .card { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; box-shadow: 0 12px 35px rgba(0,0,0,0.1); border-radius: 20px; }
         .card.flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; border-radius: 20px; background: white; font-size: 1.5rem; border: 1px solid #e2e8f0; overflow: hidden; }
-        .card-back { transform: rotateY(180deg); background-color: #f8fafc; color: var(--primary); border-color: var(--primary); }
+        
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 35px; box-sizing: border-box; border-radius: 20px; font-size: 1.5rem; border: 1px solid #e2e8f0; overflow-y: auto; line-height: 1.4; }
+        
+        /* צבעי הכרטיסיות החדשים */
+        .card-front { background-color: var(--card-front-bg); color: #333; }
+        .card-back { transform: rotateY(180deg); background-color: var(--card-back-bg); color: var(--primary); border-color: var(--success); }
 
-        .btn-row { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
-        .btn { padding: 14px 28px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.1rem; min-width: 140px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-row { display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .btn { padding: 15px 30px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.1rem; min-width: 150px; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
         .btn-nav { background: var(--primary); }
         .btn-success { background: var(--success); }
         .btn-error { background: var(--error); }
-        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+        .btn:active { transform: scale(0.97); }
 
-        #status-text { margin-top: 20px; color: #64748b; font-weight: 500; }
-        .congrats { display: none; background: white; padding: 50px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
-        footer { margin-top: auto; padding: 20px; font-size: 0.85rem; color: #94a3b8; }
+        #status-text { margin-top: 25px; color: #64748b; font-weight: 500; font-size: 0.95rem; }
+        .congrats { display: none; background: white; padding: 60px; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.1); }
+        
+        footer { margin-top: auto; padding: 30px 20px 10px; font-size: 0.85rem; color: #94a3b8; width: 100%; text-align: center; }
+        
+        /* התאמת גודל נוסחאות MathJax */
+        mjx-container { font-size: 110% !important; }
     </style>
 </head>
 <body>
@@ -84,10 +101,10 @@
 </div>
 
 <div class="container congrats" id="finish-area">
-    <h1 style="font-size: 3rem;">🎉</h1>
-    <h2>כל הכבוד, ד"ר ענבל!</h2>
-    <p>השלמת את כל הכרטיסיות בסשן הזה.</p>
-    <button class="btn btn-nav" onclick="location.reload()">תרגול חוזר</button>
+    <h1 style="font-size: 4rem; margin-bottom: 10px;">🏆</h1>
+    <h2 style="color: var(--success); font-size: 2.2rem; margin-top: 0;">כל הכבוד!</h2>
+    <p style="font-size: 1.2rem; color: #475569;">השלמת את כל הכרטיסיות בסשן הזה.</p>
+    <button class="btn btn-nav" style="margin-top: 20px;" onclick="location.reload()">תרגול חוזר</button>
 </div>
 
 <footer>&copy; 2026 ד"ר ענבל צרפתי-ברעד | הקבצים שלי</footer>
@@ -97,7 +114,7 @@
     let activePool = [];
     let currentIndex = 0;
     let currentMode = 'practice'; // ברירת מחדל: תרגול
-    let successCount = 0;
+    let quizInited = false;
 
     async function loadData() {
         const params = new URLSearchParams(window.location.search);
@@ -106,16 +123,28 @@
             const response = await fetch(`./${topic}.json`);
             if (!response.ok) throw new Error('JSON not found');
             masterList = await response.json();
+            
+            // הגדרת כותרת הדף לפי הנושא
+            document.getElementById('topic-title-main')?.remove(); // הסרת כותרת ישנה אם קיימת
+            const titleH1 = document.createElement('h1');
+            titleH1.id = 'topic-title-main';
+            titleH1.style.color = 'var(--primary)';
+            titleH1.style.marginBottom = '15px';
+            titleH1.style.fontSize = '1.8rem';
+            titleH1.innerText = `שינון: ${topic.replace('_', ' ')}`;
+            document.getElementById('quiz-area').prepend(titleH1);
+
             setMode('practice'); // הפעלה ראשונית על מצב תרגול
+            quizInited = true;
         } catch (e) {
-            document.getElementById('frontText').innerHTML = "<span style='color:red'>שגיאה בטעינת basic_kinetics.json</span>";
+            document.getElementById('frontText').innerHTML = "<span style='color:red'>שגיאה בטעינת קובץ הנתונים.</span><br><small>ודאו שקובץ ה-JSON קיים בתיקיית ה-bioreactors.</small>";
+            console.error(e);
         }
     }
 
     function setMode(mode) {
         currentMode = mode;
         currentIndex = 0;
-        successCount = 0;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(mode + 'ModeBtn').classList.add('active');
         
@@ -135,7 +164,7 @@
     }
 
     function showCard() {
-        if (activePool.length === 0 && currentMode === 'practice') {
+        if (activePool.length === 0 && currentMode === 'practice' && quizInited) {
             document.getElementById('quiz-area').style.display = 'none';
             document.getElementById('finish-area').style.display = 'block';
             return;
@@ -149,7 +178,7 @@
 
         updateUI();
 
-        // רענון משוואות MathJax
+        // רענון משוואות MathJax לאחר עדכון הטקסט
         if (window.MathJax && MathJax.typesetPromise) {
             MathJax.typesetPromise();
         }
@@ -168,13 +197,14 @@
 
     function handleResult(isSuccess) {
         if (isSuccess) {
-            activePool.splice(currentIndex, 1); // הסרה מהסבב
+            activePool.splice(currentIndex, 1); // הסרה מהסבב כי הסטודנט ידע
         } else {
             currentIndex++; // מעבר לכרטיס הבא, הטעות תופיע בסבב הבא
         }
         
         if (currentIndex >= activePool.length) {
             currentIndex = 0;
+            // ערבוב אלו שנשארו (אלו שהסטודנט טעה בהם)
             if (currentMode === 'practice') shuffle(activePool);
         }
         showCard();
