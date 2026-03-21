@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הקבצים של ענבל</title>
+    <style>
+        :root {
+            --primary-color: #1a3c5e;
+            --secondary-color: #34495e;
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--secondary-color);
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0; font-size: 2.5rem; }
+        p.subtitle { margin-top: 0.5rem; opacity: 0.9; }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .course-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border-top: 5px solid var(--primary-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .course-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .links-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 0 0;
+        }
+
+        .links-list li {
+            margin-bottom: 0.8rem;
+        }
+
+        .links-list a {
+            text-decoration: none;
+            color: #3498db;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .links-list a:hover {
+            text-decoration: underline;
+            color: var(--primary-color);
+        }
+
+        .links-list a::before {
+            content: '🔗';
+            margin-left: 8px;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>הקבצים של ענבל</h1>
+    <p class="subtitle">מאגר אפליקציות וחומרי למידה אינטראקטיביים</p>
+</header>
+
+<div class="container">
+    <div class="course-grid">
+
+        <div class="course-card">
+            <h3>ביוראקטורים ב'</h3>
+            <ul class="links-list">
+                <li><a href="bioreactors-b/schedule.html">לו"ז סמסטר דינמי</a></li>
+                <li><a href="bioreactors-b/calc_app.html">מחשבון קינטיקה</a></li>
+                </ul>
+        </div>
+
+        <div class="course-card">
+            <h3>בינה מלאכותית</h3>
+            <ul class="links-list">
+                
+                
+            </ul>
+        </div>
+
+        <div class="course-card" style="border-top-color: #bdc3c7; opacity: 0.7;">
+            <h3 style="color: #95a5a6;">קורסים נוספים</h3>
+            <p>בקרוב...</p>
+        </div>
+
+    </div>
+</div>
+
+<footer>
+    &copy; 2026 ענבל צרפתי-ברעד | נבנה בעזרת Gemini
+</footer>
+
+</body>
+</html>
