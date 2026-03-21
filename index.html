@@ -7,136 +7,164 @@
     <style>
         :root {
             --primary-color: #1a3c5e;
-            --secondary-color: #34495e;
+            --accent-color: #3b82f6;
             --bg-color: #f4f7f9;
             --card-bg: #ffffff;
+            --text-main: #334155;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
-            color: var(--secondary-color);
+            margin: 0; padding: 0;
+            color: var(--text-main);
         }
 
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 2rem 1rem;
+            padding: 3rem 1rem;
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        h1 { margin: 0; font-size: 2.5rem; }
-        p.subtitle { margin-top: 0.5rem; opacity: 0.9; }
-
         .container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
 
-        .course-grid {
+        /* עיצוב כפתור הלו"ז העליון */
+        .schedule-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .btn-schedule {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-schedule:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            background-color: #2563eb;
+        }
+
+        /* גריד לשתי הקופסאות */
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
         }
 
-        .course-card {
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        .dashboard-box {
             background: var(--card-bg);
-            border-radius: 8px;
-            border-top: 5px solid var(--primary-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            padding: 1.5rem;
-            transition: transform 0.2s;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            transition: 0.3s;
         }
 
-        .course-card:hover {
-            transform: translateY(-5px);
+        .dashboard-box:hover {
+            border-color: var(--accent-color);
         }
 
-        .course-card h3 {
+        .dashboard-box h3 {
             margin-top: 0;
             color: var(--primary-color);
-            border-bottom: 1px solid #eee;
-            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
         }
 
         .links-list {
             list-style: none;
             padding: 0;
-            margin: 1rem 0 0 0;
+            margin: 0;
+            text-align: right;
         }
 
         .links-list li {
-            margin-bottom: 0.8rem;
+            margin-bottom: 12px;
         }
 
         .links-list a {
             text-decoration: none;
-            color: #3498db;
-            display: flex;
-            align-items: center;
+            color: #475569;
             font-weight: 500;
-        }
-
-        .links-list a:hover {
-            text-decoration: underline;
-            color: var(--primary-color);
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
         }
 
         .links-list a::before {
-            content: '🔗';
+            content: "🔗";
             margin-left: 8px;
             font-size: 0.9rem;
         }
 
+        .links-list a:hover {
+            color: var(--accent-color);
+            padding-right: 5px;
+        }
+
         footer {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
+            color: #94a3b8;
             font-size: 0.9rem;
-            color: #888;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>הקבצים של ענבל</h1>
-    <p class="subtitle">מאגר אפליקציות וחומרי למידה אינטראקטיביים</p>
+    <h1>ביוראקטורים ב'</h1>
+    <p>פורטל חומרי למידה וסימולציות</p>
 </header>
 
 <div class="container">
-    <div class="course-grid">
+    
+    <div class="schedule-header">
+        <a href="bioreactors/schedule.html" class="btn-schedule">📅 לו"ז סמסטר דינמי</a>
+    </div>
 
-        <div class="course-card">
-            <h3>ביוראקטורים ב'</h3>
+    <div class="dashboard-grid">
+        
+        <div class="dashboard-box">
+            <h3>🧠 תרגול מושגים</h3>
             <ul class="links-list">
-                <li><a href="bioreactors/schedule.html">לו"ז סמסטר דינמי</a></li>
-                <li><a href="bioreactors/flashcards.html?topic=basic_kinetics">כרטיסיות שינון: מושגי יסוד בקינטיקה</a></li>
-                <li><a href="bioreactors/linearization.html">קינטיקה בסיסית ולינאריזציות</a></li>
+                <li><a href="bioreactors/flashcards.html?topic=basic_kinetics">כרטיסיות שינון: יסודות הקינטיקה</a></li>
                 </ul>
         </div>
 
-        <div class="course-card">
-            <h3>בינה מלאכותית</h3>
+        <div class="dashboard-box">
+            <h3>🔬 סימולציות</h3>
             <ul class="links-list">
-                
-                
-            </ul>
-        </div>
-
-        <div class="course-card" style="border-top-color: #bdc3c7; opacity: 0.7;">
-            <h3 style="color: #95a5a6;">קורסים נוספים</h3>
-            <p>בקרוב...</p>
+                <li><a href="bioreactors/linearization.html">סימולציית לינאריזציה</a></li>
+                </ul>
         </div>
 
     </div>
 </div>
 
 <footer>
-    &copy; 2026 ענבל צרפתי-ברעד | נבנה בעזרת Gemini
+    &copy; 2026 ד"ר ענבל צרפתי-ברעד | הפורטל שלי
 </footer>
 
 </body>
