@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כרטיסיות למידה - ד"ר ענבל צרפתי-ברעד</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root { --primary: #1a3c5e; --success: #10b981; --error: #ef4444; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .container { width: 95%; max-width: 600px; text-align: center; }
+        
+        .mode-selector { margin-bottom: 20px; background: white; padding: 10px; border-radius: 10px; display: inline-flex; gap: 10px; border: 1px solid #ddd; }
+        .mode-btn { padding: 5px 15px; border: none; border-radius: 5px; cursor: pointer; background: #eee; font-weight: bold; transition: 0.2s; }
+        .mode-btn.active { background: var(--primary); color: white; }
+
+        /* עיצוב פס התקדמות */
+        #progress-bar-container { width: 100%; background: #e2e8f0; border-radius: 10px; height: 10px; margin-bottom: 20px; overflow: hidden; display: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--success); transition: width 0.4s ease; }
+
+        .card-wrapper { perspective: 1000px; height: 320px; cursor: pointer; margin-bottom: 25px; }
+        .card { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-radius: 15px; }
+        .card.flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 25px; box-sizing: border-box; border-radius: 15px; background: white; font-size: 1.3rem; border: 2px solid #e2e8f0; }
+        .card-back { transform: rotateY(180deg); background-color: #f8fafc; color: var(--primary); border-color: var(--primary); }
+
+        .btn-row { display: flex; gap: 15px; justify-content: center; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; min-width: 120px; }
+        .btn-nav { background: var(--primary); }
+        .btn-success { background: var(--success); }
+        .btn-error { background: var(--error); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        #status-text { margin-top: 15px; color: #64748b; font-weight: 500; min-height: 1.2em; font-size: 0.9rem; }
+        .congrats { display: none; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        footer { position: fixed; bottom: 15px; font-size: 0.8rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="quiz-area">
+    <h2 id="topic-title">טוען...</h2>
+    
+    <div class="mode-selector">
+        <button class="mode-btn active" id="browseModeBtn" onclick="setMode('browse')">מצב עיון</button>
+        <button class="mode-btn" id="practiceModeBtn" onclick="setMode('practice')">מצב תרגול</button>
+    </div>
+
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div class="card-wrapper" onclick="flipCard()">
+        <div id="card" class="card">
+            <div class="card-face card-front" id="frontText"></div>
+            <div class="card-face card-back" id="backText"></div>
+        </div>
+    </div>
+
+    <div class="btn-row" id="nav-controls">
+        <button class="btn btn-nav" id="prevBtn" onclick="navigate(-1)">קודם</button>
+        <button class="btn btn-nav" id="nextBtn" onclick="navigate(1)">הבא</button>
+    </div>
+
+    <div class="btn-row" id="feedback-controls" style="display: none;">
+        <button class="btn btn-error" onclick="handleResult(false)">❌ טעיתי</button>
+        <button class="btn btn-success" onclick="handleResult(true)">✅ הצלחתי!</button>
+    </div>
+
+    <div id="status-text"></div>
+</div>
+
+<div class="container congrats" id="finish-area">
+    <h1>סיום התרגול! 🏆</h1>
+    <p>הצלחת לענות על כל הכרטיסיות בנושא זה.</p>
+    <button class="btn btn-nav" onclick="location.reload()">התחל מחדש</button>
+</div>
+
+<footer>
+    &copy; 2026 ד"ר ענבל צרפתי-ברעד | הקבצים שלי
+</footer>
+
+<script>
+    let masterList = [];
+    let activePool = [];
+    let currentIndex = 0;
+    let currentMode = 'browse';
+
+    async function loadData() {
+        const params = new URLSearchParams(window.location.search);
+        const topic = params.get('topic') || 'basic_kinetics';
+        try {
+            const response = await fetch(`${topic}.json`);
+            masterList = await response.json();
+            document.getElementById('topic-title').innerText = `שינון: ${topic.replace('_', ' ')}`;
+            setMode('browse');
+        } catch (e) {
+            document.getElementById('frontText').innerText = "שגיאה בטעינת קובץ הנתונים.";
+        }
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        currentIndex = 0;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(mode + 'ModeBtn').classList.add('active');
+        
+        activePool = [...masterList];
+        
+        if (mode === 'browse') {
+            document.getElementById('nav-controls').style.display = 'flex';
+            document.getElementById('feedback-controls').style.display = 'none';
+            document.getElementById('progress-bar-container').style.display = 'none';
+        } else {
+            shuffle(activePool);
+            document.getElementById('nav-controls').style.display = 'none';
+            document.getElementById('feedback-controls').style.display = 'flex';
+            document.getElementById('progress-bar-container').style.display = 'block';
+            updateProgressBar();
+        }
+        showCard();
+    }
+
+    function showCard() {
+        if (activePool.length === 0 && currentMode === 'practice') {
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('finish-area').style.display = 'block';
+            return;
+        }
+        const card = document.getElementById('card');
+        card.classList.remove('flipped');
+        document.getElementById('frontText').innerHTML = activePool[currentIndex].q;
+        document.getElementById('backText').innerHTML = activePool[currentIndex].a;
+        
+        if (currentMode === 'browse') {
+            document.getElementById('status-text').innerText = `כרטיס ${currentIndex + 1} מתוך ${activePool.length}`;
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === activePool.length - 1;
+        } else {
+            document.getElementById('status-text').innerText = `נשארו ${activePool.length} כרטיסיות לסיום`;
+        }
+        if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    function updateProgressBar() {
+        const percent = ((masterList.length - activePool.length) / masterList.length) * 100;
+        document.getElementById('progress-bar').style.width = percent + '%';
+    }
+
+    function handleResult(isSuccess) {
+        if (isSuccess) {
+            activePool.splice(currentIndex, 1);
+            updateProgressBar();
+        } else {
+            currentIndex++;
+        }
+        
+        if (currentIndex >= activePool.length) {
+            currentIndex = 0;
+            if (currentMode === 'practice') shuffle(activePool);
+        }
+        showCard();
+    }
+
+    function navigate(step) {
+        currentIndex += step;
+        showCard();
+    }
+
+    function flipCard() { document.getElementById('card').classList.toggle('flipped'); }
+    
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
