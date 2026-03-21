@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>קינטיקה של אנזימים - ד"ר ענבל צרפתי-ברעד</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/simple-statistics@7.8.3/dist/simple-statistics.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; }
+        .container { max-width: 1500px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .main-layout { display: flex; gap: 30px; align-items: flex-start; }
+        .chart-side { flex: 1.5; min-width: 0; position: sticky; top: 20px; }
+        .data-side { flex: 0.8; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .controls { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .control-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 5px; }
+        .canvas-container { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; height: 500px; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; background: white; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
+        th { background: #1e293b; color: white; }
+        .theory-row { background-color: #f0fdf4 !important; font-weight: bold; }
+        .nonlinear-row { background-color: #fefce8 !important; font-weight: bold; }
+        .highlight { color: #2563eb; font-weight: bold; }
+        .summary-section { margin-top: 30px; padding: 20px; background: #f1f5f9; border-radius: 12px; border: 1px solid #e2e8f0; }
+        footer { text-align: center; padding: 25px; margin-top: 40px; border-top: 2px solid #1e293b; color: #1e293b; font-weight: 600; font-size: 1.1rem; }
+        input[type=range] { flex: 1; cursor: pointer; }
+        label { font-weight: bold; min-width: 140px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="text-align:center; color: #1e293b; margin-top: 0; margin-bottom: 25px;">קינטיקה של אנזימים</h1>
+    
+    <div class="main-layout">
+        <div class="chart-side">
+            <div class="canvas-container">
+                <canvas id="kineticsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="data-side">
+            <div class="controls">
+                <div class="control-row">
+                    <label>Vmax תיאורטי: <span id="vmaxVal" class="highlight">100</span></label>
+                    <input type="range" id="theoryVmax" min="10" max="300" step="5" value="100" oninput="generateAndUI()">
+                </div>
+                <div class="control-row">
+                    <label>Km תיאורטי: <span id="kmVal" class="highlight">20</span></label>
+                    <input type="range" id="theoryKm" min="1" max="100" step="1" value="20" oninput="generateAndUI()">
+                </div>
+                <hr style="width:100%; border:0; border-top:1px solid #ddd;">
+                <div class="control-row">
+                    <label>מודל לתצוגה:</label>
+                    <select id="plotType" onchange="updateUI()" style="padding:8px; border-radius:6px; flex: 1;">
+                        <option value="mm">Michaelis-Menten (v vs [S])</option>
+                        <option value="sl">Semi-log (v vs log[S])</option>
+                        <option value="lb">Lineweaver-Burk (1/v vs 1/[S])</option>
+                        <option value="eh">Eadie-Hofstee (v vs v/[S])</option>
+                        <option value="hw">Hanes-Woolf ([S]/v vs [S])</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <label>רמת רעש (%): <span id="noiseLabel" class="highlight">2.0</span></label>
+                    <input type="range" id="noiseLevel" min="0" max="25" step="1" value="2" oninput="updateUI()">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="generateAndUI()">דגימה חדשה 🎲</button>
+                    <button class="btn btn-warning" onclick="saveSnapshot()">שמור להשוואה 📥</button>
+                    <button class="btn btn-danger" onclick="clearSnapshots()">נקה הכל 🗑️</button>
+                </div>
+            </div>
+            <table id="snapshotTable">
+                <thead>
+                    <tr><th>סדרה</th><th>Vmax</th><th>Km</th></tr>
+                </thead>
+                <tbody id="statsTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="summary-section">
+        <h3 style="margin-top:0; color:#1e293b;">סיכום השוואתי של קבועים קינטיים</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>מקור / שיטת חישוב</th>
+                    <th>Vmax (µmol/min)</th>
+                    <th>Km (mM)</th>
+                    <th>סטייה Vmax (%)</th>
+                    <th>סטייה Km (%)</th>
+                </tr>
+            </thead>
+            <tbody id="comparisonBody"></tbody>
+        </table>
+    </div>
+
+    <footer>
+        &copy; 2026 ד"ר ענבל צרפתי-ברעד | הקבצים שלי - פיתוח סביבות למידה אינטראקטיביות
+    </footer>
+</div>
+
+<script>
+    let currentData = [];
+    let snapshots = [];
+    let chart;
+    const colors = ['#f97316', '#8b5cf6', '#10b981', '#ec4899', '#06b6d4'];
+
+    function generateData() {
+        const substrates = [1, 2, 5, 10, 20, 50, 100, 200];
+        const noise = document.getElementById('noiseLevel').value / 100;
+        const vMaxT = parseFloat(document.getElementById('theoryVmax').value);
+        const kmT = parseFloat(document.getElementById('theoryKm').value);
+        document.getElementById('vmaxVal').innerText = vMaxT;
+        document.getElementById('kmVal').innerText = kmT;
+        currentData = substrates.map(s => {
+            const vBase = (vMaxT * s) / (kmT + s);
+            const noiseVal = vBase * noise * (Math.random() * 2 - 1);
+            return { s: s, v: Math.max(0.1, vBase + noiseVal), vMaxT: vMaxT, kmT: kmT };
+        });
+    }
+
+    // פונקציית רגרסיה לא-לינארית פשוטה (איטרטיבית)
+    function calculateNonLinear(data) {
+        let vm = data[data.length-1].v * 1.1; // ניחוש ראשוני
+        let km = 10;
+        const learningRate = 0.01;
+        
+        for(let i=0; i<5000; i++) {
+            let dVm = 0, dKm = 0;
+            data.forEach(d => {
+                let pred = (vm * d.s) / (km + d.s);
+                let diff = pred - d.v;
+                dVm += diff * (d.s / (km + d.s));
+                dKm += diff * (-vm * d.s / Math.pow(km + d.s, 2));
+            });
+            vm -= dVm * learningRate;
+            km -= dKm * learningRate;
+        }
+        return { vmax: Math.max(0.1, vm), km: Math.max(0.1, km) };
+    }
+
+    function calculateConstants(data, type) {
+        if (type === 'nonlinear') return calculateNonLinear(data);
+        
+        let xF, yF;
+        if (type === 'lb') { xF = d => 1/d.s; yF = d => 1/d.v; }
+        else if (type === 'eh') { xF = d => d.v/d.s; yF = d => d.v; }
+        else { xF = d => d.s; yF = d => d.s/d.v; } 
+
+        const pts = data.map(d => [xF(d), yF(d)]);
+        const reg = ss.linearRegression(pts);
+        let vm, km;
+        if (type === 'lb') { vm = 1 / reg.b; km = reg.m * vm; }
+        else if (type === 'eh') { vm = reg.b; km = -reg.m; }
+        else { vm = 1 / reg.m; km = reg.b * vm; } 
+        return { vmax: vm, km: km };
+    }
+
+    function updateUI() {
+        const type = document.getElementById('plotType').value;
+        document.getElementById('noiseLabel').innerText = document.getElementById('noiseLevel').value;
+        const currentRes = calculateConstants(currentData, type);
+        renderChart(type, currentRes);
+        updateTables(currentRes);
+    }
+
+    function updateTables(currentRes) {
+        const statsTable = document.getElementById('statsTable');
+        statsTable.innerHTML = `<tr><td>נוכחי</td><td>${currentRes.vmax.toFixed(1)}</td><td>${currentRes.km.toFixed(1)}</td></tr>`;
+        snapshots.forEach((s, i) => statsTable.innerHTML += `<tr style="color:${s.color}"><td>שמור ${i+1}</td><td>${s.results.vmax.toFixed(1)}</td><td>${s.results.km.toFixed(1)}</td></tr>`);
+
+        const compBody = document.getElementById('comparisonBody');
+        const vT = parseFloat(document.getElementById('theoryVmax').value);
+        const kT = parseFloat(document.getElementById('theoryKm').value);
+
+        const methods = [
+            { id: 'theory', name: 'ערכים תיאורטיים (Input)' },
+            { id: 'nonlinear', name: 'Michaelis-Menten (רגרסיה לא-לינארית)' },
+            { id: 'lb', name: 'Lineweaver-Burk' },
+            { id: 'eh', name: 'Eadie-Hofstee' },
+            { id: 'hw', name: 'Hanes-Woolf' }
+        ];
+
+        compBody.innerHTML = "";
+        methods.forEach(m => {
+            let res = (m.id === 'theory') ? {vmax: vT, km: kT} : calculateConstants(currentData, m.id);
+            let ev = Math.abs((res.vmax - vT)/vT*100).toFixed(1);
+            let ek = Math.abs((res.km - kT)/kT*100).toFixed(1);
+            
+            compBody.innerHTML += `
+                <tr class="${m.id==='theory'?'theory-row':(m.id==='nonlinear'?'nonlinear-row':'')}">
+                    <td>${m.name}</td>
+                    <td>${res.vmax.toFixed(2)}</td>
+                    <td>${res.km.toFixed(2)}</td>
+                    <td style="color:${ev > 10 ? '#ef4444' : '#10b981'}">${m.id==='theory'?'0.0':ev}%</td>
+                    <td style="color:${ek > 10 ? '#ef4444' : '#10b981'}">${m.id==='theory'?'0.0':ek}%</td>
+                </tr>`;
+        });
+    }
+
+    function saveSnapshot() {
+        if (snapshots.length >= 5) return;
+        const type = document.getElementById('plotType').value;
+        snapshots.push({ data: [...currentData], results: calculateConstants(currentData, type), color: colors[snapshots.length % colors.length] });
+        updateUI();
+    }
+
+    function clearSnapshots() { snapshots = []; updateUI(); }
+    function generateAndUI() { generateData(); updateUI(); }
+
+    function renderChart(type, res) {
+        const ctx = document.getElementById('kineticsChart').getContext('2d');
+        if (chart) chart.destroy();
+        let datasets = [];
+        const createSet = (data, r, label, color, isCurrent) => {
+            let scatter = [], trend = [];
+            if (type === 'mm' || type === 'sl') {
+                scatter = data.map(d => ({ x: d.s, y: d.v }));
+                let step = type === 'sl' ? 0.05 : 2;
+                for(let i = (type==='sl'?-1:0); i <= (type==='sl'?2.5:220); i += step) {
+                    let x = type === 'sl' ? Math.pow(10, i) : i;
+                    trend.push({ x: x, y: (r.vmax * x)/(r.km + x) });
+                }
+            } else {
+                let xF = (type==='lb'?d=>1/d.s:(type==='eh'?d=>d.v/d.s:d=>d.s));
+                let yF = (type==='lb'?d=>1/d.v:(type==='eh'?d=>d.v:d=>d.s/d.v));
+                scatter = data.map(d => ({x: xF(d), y: yF(d)}));
+                const pts = data.map(d => [xF(d), yF(d)]);
+                const localLine = ss.linearRegressionLine(ss.linearRegression(pts));
+                const xs = scatter.map(p => p.x);
+                trend = [{x: Math.min(...xs)*0.5, y: localLine(Math.min(...xs)*0.5)}, {x: Math.max(...xs)*1.5, y: localLine(Math.max(...xs)*1.5)}];
+            }
+            return [
+                { type: 'line', label: label+' (מגמה)', data: trend, borderColor: color, borderWidth: isCurrent?3:1, pointRadius: 0, fill: false },
+                { type: 'scatter', label: label, data: scatter, backgroundColor: color, pointRadius: isCurrent?6:4 }
+            ];
+        };
+        snapshots.forEach((s, i) => datasets.push(...createSet(s.data, s.results, `שמור ${i+1}`, s.color, false)));
+        datasets.push(...createSet(currentData, res, 'נוכחי', '#2563eb', true));
+        chart = new Chart(ctx, { data: { datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: type==='sl'?'logarithmic':'linear' }, y: { type: 'linear' } } } });
+    }
+    generateAndUI();
+</script>
+</body>
+</html>
