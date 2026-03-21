@@ -33,30 +33,27 @@
       "q": "מה קורה למשוואה כאשר $[S] \\gg K_M$?",
       "a": "האנזים ברוויה והמהירות מתקרבת למקסימום: <br> $v \\approx V_{max}$"
     },
-    {
-      "q": "מהו מנגנון Henri / Michaelis-Menten הבסיסי?",
-      "a": "$E + S \\rightleftharpoons ES \\rightarrow E + P$"
-    },
+
     {
       "q": "מה ההבדל בין פירוש $K_M$ בהנחת MM לעומת BH?",
       "a": "MM (שיווי משקל): $K_M = \\frac{k_{-1}}{k_1}$ <br> BH (מצב עמיד): $K_M = \\frac{k_{-1} + k_2}{k_1}$"
     },
-    {
-      "q": "מהי המשוואה האינטגרלית של מיכאליס-מנטן?",
-      "a": "$[S]_0 - [S] + K_M \\cdot \\ln\\left(\\frac{[S]_0}{[S]}\\right) = V_{max} \\cdot t$"
-    },
+
     {
       "q": "מהם הצירים בלינאריזציית Lineweaver-Burk?",
       "a": "$\\frac{1}{v}$ (ציר Y) כנגד $\\frac{1}{[S]}$ (ציר X)."
     },
+
     {
-      "q": "איך מוציאים $V_{max}$ ו-$K_M$ מגרף Lineweaver-Burk?",
-      "a": "השיפוע הוא $\\frac{K_M}{V_{max}}$ והחיתוך עם ציר Y הוא $\\frac{1}{V_{max}}$."
+    "q": "איך מוציאים $V_{max}$ ו-$K_M$ מגרף Lineweaver-Burk?",
+    "a": "השיפוע (Slope) הוא: <br> $\\frac{K_M}{V_{max}}$ <br><br> והחיתוך עם ציר $Y$ (Intercept) הוא: <br> $\\frac{1}{V_{max}}$"
     },
+
     {
       "q": "מהם הצירים בלינאריזציית Eadie-Hofstee?",
       "a": "$v$ (ציר Y) כנגד $\\frac{v}{[S]}$ (ציר X)."
     },
+
     {
       "q": "מהם הצירים בלינאריזציית Hanes-Woolf?",
       "a": "$\\frac{[S]}{v}$ (ציר Y) כנגד $[S]$ (ציר X)."
