@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>כרטיסיות למידה - ד"ר ענבל צרפתי-ברעד</title>
-    
     <script>
         window.MathJax = {
             tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], processEscapes: true },
@@ -12,14 +11,8 @@
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    
     <style>
-        :root { 
-            --primary: #1a3c5e; --success: #10b981; --error: #ef4444; --bg: #f4f7f9;
-            --pink-bg: #fff0f3; /* ורוד בהיר */
-            --green-bg: #f0fff4; /* ירוק בהיר */
-        }
-        
+        :root { --primary: #1a3c5e; --success: #10b981; --error: #ef4444; --bg: #f4f7f9; --pink: #fff5f7; --green: #f0fdf4; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { width: 95%; max-width: 600px; text-align: center; }
         
@@ -34,17 +27,9 @@
         .card { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .card.flipped { transform: rotateY(180deg); }
         
-        /* אנימציית רעידה */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        .shake { animation: shake 0.3s ease-in-out; }
-
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; border-radius: 20px; font-size: 1.5rem; border: 2px solid #e2e8f0; }
-        .card-front { background-color: var(--pink-bg); color: #333; }
-        .card-back { transform: rotateY(180deg); background-color: var(--green-bg); color: var(--primary); border-color: var(--success); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; border-radius: 20px; font-size: 1.4rem; border: 2px solid #e2e8f0; text-align: center; overflow-y: auto; }
+        .card-front { background-color: var(--pink); color: #333; }
+        .card-back { transform: rotateY(180deg); background-color: var(--green); color: var(--primary); border-color: var(--success); }
 
         .btn-row { display: flex; gap: 15px; justify-content: center; }
         .btn { padding: 14px 28px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.1rem; min-width: 140px; }
@@ -54,6 +39,7 @@
         .btn:disabled { opacity: 0.3; }
 
         .congrats { display: none; background: white; padding: 50px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        #status-text { margin-top: 15px; color: #64748b; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -68,8 +54,8 @@
 
     <div class="card-wrapper" onclick="flipCard()">
         <div id="card" class="card">
-            <div class="card-face card-front" id="frontText"></div>
-            <div class="card-face card-back" id="backText"></div>
+            <div class="card-face card-front" id="frontText">טוען...</div>
+            <div class="card-face card-back" id="backText">טוען...</div>
         </div>
     </div>
 
@@ -82,6 +68,7 @@
         <button class="btn btn-error" onclick="handleResult(false)">❌ טעיתי</button>
         <button class="btn btn-success" onclick="handleResult(true)">✅ הצלחתי!</button>
     </div>
+    <div id="status-text"></div>
 </div>
 
 <div class="container congrats" id="finish-area">
@@ -101,9 +88,12 @@
         const topic = params.get('topic') || 'basic_kinetics';
         try {
             const response = await fetch(`./${topic}.json`);
+            if (!response.ok) throw new Error('File missing');
             masterList = await response.json();
             setMode('practice');
-        } catch (e) { console.error("Error loading JSON"); }
+        } catch (e) {
+            document.getElementById('frontText').innerHTML = "<span style='color:red'>שגיאה בטעינת הקובץ.</span><br><small>ודאו שהקובץ בתיקייה ושאתם ב-GitHub Pages.</small>";
+        }
     }
 
     function setMode(mode) {
@@ -132,12 +122,12 @@
             document.getElementById('finish-area').style.display = 'block';
             return;
         }
-        const card = document.getElementById('card');
-        card.classList.remove('flipped', 'shake'); // הסרת רעידה קודמת
+        document.getElementById('card').classList.remove('flipped');
         document.getElementById('frontText').innerHTML = activePool[currentIndex].q;
         document.getElementById('backText').innerHTML = activePool[currentIndex].a;
         
         if (currentMode === 'browse') {
+            document.getElementById('status-text').innerText = `כרטיס ${currentIndex + 1} מתוך ${activePool.length}`;
             document.getElementById('prevBtn').disabled = currentIndex === 0;
             document.getElementById('nextBtn').disabled = currentIndex === activePool.length - 1;
         } else {
@@ -147,15 +137,9 @@
     }
 
     function handleResult(isSuccess) {
-        if (isSuccess) {
-            activePool.splice(currentIndex, 1);
-        } else {
-            // אפקט רעידה לכרטיסייה
-            const cardElement = document.getElementById('card');
-            cardElement.classList.add('shake');
-            setTimeout(() => cardElement.classList.remove('shake'), 300);
-            currentIndex++;
-        }
+        if (isSuccess) activePool.splice(currentIndex, 1);
+        else currentIndex++;
+        
         if (currentIndex >= activePool.length) {
             currentIndex = 0;
             if (currentMode === 'practice') shuffle(activePool);
