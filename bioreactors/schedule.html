@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>לו"ז סמסטר - הנדסה</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #dee2e6;
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            border: 1px solid #455a64;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            color: #333;
+	      font-size: 18px; /* הוספתי את השורה הזו - זה ישפיע על כל תוכן הטבלה */
+        }
+        /* שורה של שבוע שעבר */
+        .passed {
+            background-color: #f2f2f2 !important;
+            color: #95a5a6 !important;
+        }
+        .passed td {
+            color: #95a5a6;
+        }
+        /* שורה של השבוע הנוכחי */
+        .current {
+            background-color: #fff9c4 !important; /* צהוב בהיר */
+            font-weight: bold;
+            border: 2px solid #f1c40f;
+        }
+        tr:nth-child(even):not(.passed):not(.current) {
+            background-color: #f8f9fa;
+        }
+        tr:hover:not(.passed) {
+            background-color: #eef6fc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>לו"ז מתוכנן סמסטר ב תשפו</h1>
+    <table id="scheduleTable">
+        <thead>
+            <tr>
+                <th>שבוע</th>
+                <th>הרצאה (ראשון)</th>
+                <th>תרגול (שני/חמישי)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr data-date="2026-03-22"><td>22.3</td><td>הכרות, קינטיקה של אנזימים</td><td>אין</td></tr>
+            <tr data-date="2026-04-12"><td>12.4</td><td>קינטיקה, לינאריזציות</td><td>קינטיקה אנזימטית</td></tr>
+            <tr data-date="2026-04-19"><td>19.4</td><td>מעכבים</td><td>מעכבים</td></tr>
+            <tr data-date="2026-04-26"><td>26.4</td><td>השפעת pH</td><td>השפעת pH</td></tr>
+            <tr data-date="2026-05-03"><td>03.5</td><td>השפעת טמפרטורה</td><td>השפעת טמפרטורה</td></tr>
+            <tr data-date="2026-05-10"><td>10.5</td><td>פוטו-ביו-ראקטורים</td><td>פוטו-ביו-ראקטורים</td></tr>
+            <tr data-date="2026-05-17"><td>17.5</td><td>השלמות, הכנה למצגות</td><td>אין</td></tr>
+            <tr data-date="2026-05-24"><td>24.5</td><td>קיבוע חיצוני</td><td>קיבוע חיצוני</td></tr>
+            <tr data-date="2026-05-31"><td>31.5</td><td>קיבוע פנימי</td><td>קיבוע פנימי</td></tr>
+            <tr data-date="2026-06-07"><td>07.6</td><td>קיבוע חיצוני ופנימי</td><td>קיבוע חיצוני ופנימי</td></tr>
+            <tr data-date="2026-06-14"><td>14.6</td><td>מצגות</td><td>מצגות</td></tr>
+            <tr data-date="2026-06-21"><td>21.6</td><td>מצגות</td><td>תרגול הכנה לבחינה</td></tr>
+            <tr data-date="2026-06-28"><td>28.6</td><td>-</td><td>סיכום</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function updateTable() {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const rows = document.querySelectorAll('#scheduleTable tbody tr');
+        
+        rows.forEach(row => {
+            const dateStr = row.getAttribute('data-date');
+            if (dateStr) {
+                const startDate = new Date(dateStr);
+                
+                // חישוב יום שישי של אותו שבוע (5 ימים אחרי יום ראשון)
+                const friday = new Date(startDate);
+                friday.setDate(startDate.getDate() + 5);
+                
+                // 1. אם עבר יום שישי של אותו שבוע -> אפור
+                if (now >= friday) {
+                    row.classList.add('passed');
+                } 
+                // 2. אם אנחנו בתוך השבוע (מיום ראשון עד שישי) -> צהוב
+                else if (now >= startDate && now < friday) {
+                    row.classList.add('current');
+                }
+            }
+        });
+    }
+    updateTable();
+</script>
+
+</body>
+</html>
