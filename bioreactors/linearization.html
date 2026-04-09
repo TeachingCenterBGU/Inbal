@@ -74,7 +74,7 @@
                     </select>
                 </div>
                 <div class="control-row">
-                    <label>רמת רעש (%): <span id="noiseLabel" class="highlight">2.0</span></label>
+                    <label>רמת רעש (%): <span id="noiseLabel" class="highlight">2</span></label>
                     <input type="range" id="noiseLevel" min="0" max="25" step="1" value="2" oninput="updateUI()">
                 </div>
                 <div class="btn-row">
@@ -154,7 +154,7 @@
     }
 
     function calculateConstants(data, type) {
-        if (type === 'nonlinear') return calculateNonLinear(data);
+        if (type === 'nonlinear' || type === 'mm' || type === 'sl') return calculateNonLinear(data);
         
         let xF, yF;
         if (type === 'lb') { xF = d => 1/d.s; yF = d => 1/d.v; }
@@ -184,8 +184,8 @@
         snapshots.forEach((s, i) => statsTable.innerHTML += `<tr style="color:${s.color}"><td>שמור ${i+1}</td><td>${s.results.vmax.toFixed(1)}</td><td>${s.results.km.toFixed(1)}</td></tr>`);
 
         const compBody = document.getElementById('comparisonBody');
-        const vT = parseFloat(document.getElementById('theoryVmax').value);
-        const kT = parseFloat(document.getElementById('theoryKm').value);
+        const vT = currentData[0].vMaxT;
+        const kT = currentData[0].kmT;
 
         const methods = [
             { id: 'theory', name: 'ערכים תיאורטיים (Input)' },
@@ -215,7 +215,7 @@
     function saveSnapshot() {
         if (snapshots.length >= 5) return;
         const type = document.getElementById('plotType').value;
-        snapshots.push({ data: [...currentData], results: calculateConstants(currentData, type), color: colors[snapshots.length % colors.length] });
+        snapshots.push({ data: [...currentData], results: calculateNonLinear(currentData), color: colors[snapshots.length % colors.length] });
         updateUI();
     }
 
