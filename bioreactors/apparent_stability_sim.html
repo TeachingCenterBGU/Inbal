@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>סימולציית אשליה של יציבות ויעילות</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 800px; margin: auto; background-color: #f8fafc; color: #334155; }
+        .control-panel { margin: 20px 0; padding: 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        label { font-weight: bold; font-size: 1.1rem; color: #1e293b; }
+        .slider-wrapper { display: flex; align-items: center; gap: 15px; margin-top: 10px; }
+        input[type="range"] { flex-grow: 1; cursor: pointer; }
+        
+        /* עיצוב למד היעילות */
+        .efficiency-box { margin-top: 20px; padding: 15px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: space-between; border: 1px solid #cbd5e1; }
+        .efficiency-text { font-weight: bold; font-size: 1.2rem; }
+        .efficiency-value { font-size: 1.5rem; font-weight: 900; padding: 5px 15px; border-radius: 50px; color: white; transition: background-color 0.3s; }
+        
+        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        canvas { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>אשליה של יציבות מול יעילות פנימית</h2>
+    <p>גלו כיצד העמסת עודף אנזים משפרת את "היציבות הנצפית" לאורך זמן, אך במקביל גובה מחיר כבד של ירידה ביעילות האנזימטית (η) עקב מגבלות דיפוזיה.</p>
+    
+    <div class="control-panel">
+        <label for="excessSlider">עודף אנזים התחלתי: <span id="excessValue" style="color: #3b82f6;">10</span></label>
+        <div class="slider-wrapper">
+            <span>1</span>
+            <input type="range" id="excessSlider" min="1" max="25" step="1" value="10">
+            <span>25</span>
+        </div>
+        
+        <div class="efficiency-box">
+            <span class="efficiency-text">יעילות התחלתית משוערת (η):</span>
+            <span id="efficiencyBadge" class="efficiency-value">31%</span>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="stabilityChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('stabilityChart').getContext('2d');
+        const days = Array.from({length: 15}, (_, i) => i);
+        
+        // פונקציות דעיכה
+        const freeEnzyme = days.map(d => 100 * Math.exp(-0.4 * d));
+        const trueActive = days.map(d => 100 * Math.exp(-0.2 * d)); // דעיכה איטית יותר בגלל הקיבוע
+
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: days,
+                datasets: [
+                    { label: 'אנזים חופשי', data: freeEnzyme, borderColor: '#ef4444', fill: false, tension: 0.1 },
+                    { label: 'אנזים מקובע - פעיל בפועל (בפנים)', data: trueActive, borderColor: '#3b82f6', borderDash: [5, 5], fill: false, tension: 0.1 },
+                    { label: 'אנזים מקובע - פעילות נצפית (בחוץ)', data: [], borderColor: '#10b981', borderWidth: 4, fill: false, tension: 0.1 }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'זמן (ימים)', font: {weight: 'bold'} } },
+                    y: { title: { display: true, text: 'פעילות מנורמלת (%)', font: {weight: 'bold'} }, min: 0, max: 110 }
+                }
+            }
+        });
+
+        function updateSimulation(excessFactor) {
+            // עדכון הגרף
+            const observedActivity = trueActive.map(val => {
+                const totalPotential = val * excessFactor;
+                return totalPotential >= 100 ? 100 : totalPotential;
+            });
+            chart.data.datasets[2].data = observedActivity;
+            chart.update();
+
+            // עדכון היעילות
+            // חישוב מקורב פדגוגי: יעילות מתנהגת הפוך לשורש של עודף האנזים (מודולוס תיל)
+            const efficiency = Math.min(100, 100 / Math.sqrt(excessFactor));
+            const badge = document.getElementById('efficiencyBadge');
+            
+            badge.innerText = efficiency.toFixed(0) + '%';
+            
+            // שינוי צבע התיג לפי היעילות
+            if (efficiency > 80) {
+                badge.style.backgroundColor = '#10b981'; // ירוק - יעילות גבוהה
+            } else if (efficiency > 40) {
+                badge.style.backgroundColor = '#f59e0b'; // כתום - יעילות בינונית
+            } else {
+                badge.style.backgroundColor = '#ef4444'; // אדום - יעילות נמוכה
+            }
+        }
+
+        document.getElementById('excessSlider').addEventListener('input', function(e) {
+            const factor = e.target.value;
+            document.getElementById('excessValue').innerText = factor;
+            updateSimulation(factor);
+        });
+
+        // אתחול
+        updateSimulation(10);
+    </script>
+</body>
+</html>
