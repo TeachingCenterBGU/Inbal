@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>סימולציית קבוע אפקטיביות - Biot & Thiele</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 900px; margin: auto; background-color: #f8fafc; color: #334155; }
+        .control-panel { margin: 20px 0; padding: 20px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        label { font-weight: bold; font-size: 1.1rem; color: #1e293b; }
+        .slider-wrapper { display: flex; align-items: center; gap: 15px; margin-top: 10px; }
+        input[type="range"] { flex-grow: 1; cursor: pointer; }
+        .regime-box { margin-top: 15px; padding: 10px; background-color: #e0f2fe; border-right: 4px solid #0284c7; border-radius: 4px; font-weight: bold; }
+        .chart-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        canvas { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>מודולוס תיל ומספר ביו (Thiele Modulus & Biot Number)</h2>
+    <p>הגרף מציג את קבוע האפקטיביות הכולל (η₀) כפונקציה של מודולוס תיל (ϕ). שחקו עם מספר ביו (Bi) כדי לראות כיצד התנגדות חיצונית למעבר חומר "מפילה" את היעילות הכללית של החלקיק.</p>
+    
+    <div class="control-panel">
+        <label for="biotSlider">מספר ביו (Bi): <span id="biotValue" style="color: #0284c7;">10</span></label>
+        <div class="slider-wrapper">
+            <span>0.1</span>
+            <input type="range" id="biotSlider" min="0.1" max="100" step="0.1" value="10">
+            <span>100</span>
+        </div>
+        <div id="regimeIndicator" class="regime-box">
+            מצב נוכחי: מעבר החומר החיצוני מהיר. המערכת מוגבלת ע"י דיפוזיה פנימית (בערכי ϕ גבוהים).
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="effectivenessChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('effectivenessChart').getContext('2d');
+        
+        // יצירת מערך ערכי מודולוס תיל (ציר X בסקאלה לוגריתמית)
+        const phiValues = [];
+        for (let i = 0.1; i <= 100; i *= 1.2) {
+            phiValues.push(i);
+        }
+
+        // פונקציה לחישוב קבוע אפקטיביות פנימי (η) עבור חלקיק כדורי מסדר ראשון
+        function calcInternalEta(phi) {
+            if (phi < 0.01) return 1; // מניעת חלוקה באפס
+            return (3 / phi) * (1 / Math.tanh(phi) - 1 / phi);
+        }
+
+        // פונקציה לחישוב קבוע אפקטיביות כולל (η₀)
+        function calcOverallEta(phi, bi) {
+            const eta = calcInternalEta(phi);
+            return eta / (1 + (eta * Math.pow(phi, 2)) / (3 * bi));
+        }
+
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: phiValues.map(v => v.toFixed(2)),
+                datasets: [
+                    { 
+                        label: 'קבוע אפקטיביות כולל (η₀)', 
+                        data: [], 
+                        borderColor: '#2563eb', 
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3, 
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { 
+                        type: 'logarithmic',
+                        title: { display: true, text: 'מודולוס תיל (ϕ) - לוגריתמי', font: {size: 14, weight: 'bold'} },
+                        min: 0.1,
+                        max: 100
+                    },
+                    y: { 
+                        type: 'logarithmic',
+                        title: { display: true, text: 'קבוע אפקטיביות כולל (η₀) - לוגריתמי', font: {size: 14, weight: 'bold'} },
+                        min: 0.01,
+                        max: 1
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'η₀: ' + context.parsed.y.toFixed(3);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateChart(bi) {
+            const overallEtaData = phiValues.map(phi => calcOverallEta(phi, bi));
+            chart.data.datasets[0].data = overallEtaData;
+            chart.update();
+
+            // עדכון תיבת הטקסט המסבירה את המשטר
+            const regimeBox = document.getElementById('regimeIndicator');
+            if (bi < 1) {
+                regimeBox.innerText = "מצב נוכחי: מגבלת מעבר חומר חיצוני! (Bi נמוך). החלקיק 'מורעב' מבחוץ, והיעילות צונחת ללא קשר לדיפוזיה הפנימית.";
+                regimeBox.style.borderColor = "#e11d48";
+                regimeBox.style.backgroundColor = "#ffe4e6";
+                regimeBox.style.color = "#9f1239";
+            } else if (bi >= 1 && bi < 20) {
+                regimeBox.innerText = "מצב נוכחי: משטר מעורב. קיימת התנגדות גם ממעבר חומר חיצוני וגם מדיפוזיה פנימית.";
+                regimeBox.style.borderColor = "#d97706";
+                regimeBox.style.backgroundColor = "#fef3c7";
+                regimeBox.style.color = "#92400e";
+            } else {
+                regimeBox.innerText = "מצב נוכחי: מעבר חומר חיצוני מהיר (Bi גבוה). מגבלת התהליך היא הדיפוזיה הפנימית או הריאקציה (תלוי ב-ϕ).";
+                regimeBox.style.borderColor = "#059669";
+                regimeBox.style.backgroundColor = "#d1fae5";
+                regimeBox.style.color = "#065f46";
+            }
+        }
+
+        document.getElementById('biotSlider').addEventListener('input', function(e) {
+            const bi = parseFloat(e.target.value);
+            document.getElementById('biotValue').innerText = bi.toFixed(1);
+            updateChart(bi);
+        });
+
+        // אתחול התחלתי
+        updateChart(10);
+    </script>
+</body>
+</html>
