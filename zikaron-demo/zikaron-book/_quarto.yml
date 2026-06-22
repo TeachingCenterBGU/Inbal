@@ -1,0 +1,48 @@
+project:
+  type: book
+  output-dir: _book
+
+lang: he
+dir: rtl
+
+book:
+  title: "זיכרון קולקטיבי"
+  subtitle: "מבוא ביקורתי"
+  author: "ד״ר ישראלה דמו"
+  date: today
+  date-format: "MMMM YYYY"
+  search: true
+  page-footer:
+    center: "ספר הדגמה שנבנה ב-Quarto · היחידה לקידום ההוראה והלמידה"
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - 01-misgarot.qmd
+    - 02-atarim.qmd
+    - 03-tarbut.qmd
+    - references.qmd
+
+bibliography: references.bib
+# ברירת המחדל היא Chicago author-date. אפשר להחליף ל-CSL עברי בשורה הבאה:
+# csl: chicago-author-date.csl
+
+format:
+  html:
+    theme:
+      - cosmo
+      - theme.scss
+    toc: true
+    toc-title: "בעמוד זה"
+    toc-depth: 2
+    number-sections: true
+    number-depth: 2
+    link-citations: true
+    citations-hover: true
+    fontsize: 1.05rem
+    linestretch: 1.7
+    code-copy: true
+  # פורמט PDF (דורש מנוע XeLaTeX עם תמיכה בעברית — מושבת כברירת מחדל):
+  # pdf:
+  #   documentclass: scrbook
+  #   pdf-engine: xelatex
+  #   mainfont: "David Libre"

@@ -1,0 +1,20 @@
+{
+  "index.qmd": {
+    "index.html": "4524e144"
+  },
+  "intro.qmd": {
+    "intro.html": "aea499c9"
+  },
+  "01-misgarot.qmd": {
+    "01-misgarot.html": "32059f85"
+  },
+  "02-atarim.qmd": {
+    "02-atarim.html": "afca8ea0"
+  },
+  "03-tarbut.qmd": {
+    "03-tarbut.html": "55cbccce"
+  },
+  "references.qmd": {
+    "references.html": "c26377cc"
+  }
+}

@@ -1,0 +1,111 @@
+/*-- scss:defaults --*/
+
+// גופנים עבריים: גוף סריפי קלאסי לספר, כותרות סאנס־סריף מודרני
+@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@400;500;700&display=swap');
+
+$font-family-serif:      "Frank Ruhl Libre", "David Libre", Georgia, serif;
+$font-family-sans-serif: "Heebo", "Arial Hebrew", Arial, sans-serif;
+
+// פלטת צבעים (תואמת לקו העיצוב של היחידה)
+$primary:   #1f4e6b;   // נייבי
+$secondary: #2a9d8f;   // טורקיז
+$body-color: #1d2733;
+$link-color: #1f4e6b;
+
+$font-size-root: 17px;
+$line-height-base: 1.75;
+
+/*-- scss:rules --*/
+
+// --- בסיס RTL ---
+body {
+  direction: rtl;
+  text-align: right;
+  font-family: $font-family-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.sidebar-title, .quarto-title-banner,
+.navbar, .toc-actions {
+  font-family: $font-family-sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+// כותרות פרקים עם קו תחתון עדין
+h1.title { color: $primary; }
+h2 {
+  border-bottom: 2px solid rgba($secondary, .35);
+  padding-bottom: .25rem;
+  margin-top: 2.2rem;
+}
+
+// --- תוכן עניינים (TOC) בצד ימין ---
+#quarto-margin-sidebar, .margin-sidebar {
+  text-align: right;
+}
+.sidebar nav[role="doc-toc"] ul > li > a.active {
+  border-right: 3px solid $secondary;
+  border-left: none;
+  padding-right: .4rem;
+}
+
+// --- ציטוטים (blockquote) ---
+blockquote {
+  border-right: 4px solid $secondary;
+  border-left: none;
+  padding: .4rem 1.1rem .4rem 1rem;
+  margin: 1.4rem 0;
+  background: rgba($secondary, .06);
+  color: #3a4a57;
+  font-size: 1.05em;
+}
+
+// אפיגרף (ציטוט פתיחה) — מודגש ומיושר
+.epigraph blockquote {
+  font-style: italic;
+  text-align: center;
+  border: none;
+  background: none;
+  font-size: 1.25em;
+  color: $primary;
+}
+.epigraph .source {
+  display: block;
+  text-align: center;
+  font-size: .8em;
+  font-style: normal;
+  color: #6b7a86;
+  margin-top: .4rem;
+}
+
+// --- ציטוטים חיים (citations) ---
+.citation a { 
+  color: $secondary; 
+  text-decoration: none; 
+  font-weight: 500;
+}
+.citation a:hover { text-decoration: underline; }
+
+// --- ביבליוגרפיה ---
+#refs .csl-entry {
+  margin-bottom: .8rem;
+  padding-right: 1.4rem;
+  text-indent: -1.4rem;   // hanging indent הפוך ל-RTL
+}
+
+// --- קוד נשאר LTR ---
+pre, code, .sourceCode {
+  direction: ltr;
+  text-align: left;
+  font-family: "JetBrains Mono", "Courier New", monospace;
+}
+
+// --- הערות שוליים ---
+.footnote-ref { font-weight: 600; color: $secondary; }
+#footnotes { direction: rtl; text-align: right; }
+
+// --- callout: יישור אייקון לימין ---
+.callout { text-align: right; }
+.callout-title { flex-direction: row-reverse; }
+.callout-icon-container { margin-left: .5rem; margin-right: 0; }
