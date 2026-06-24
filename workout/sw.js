@@ -1,5 +1,5 @@
 // Bump CACHE_NAME on every deploy so clients pick up the new version.
-var CACHE_NAME = 'log-v1';
+var CACHE_NAME = 'log-v2';
 var STATIC_ASSETS = [
   './',
   './index.html',
