@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LOG — יומן אימונים</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1025">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LOG">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1025;--bg2:#151938;--bg3:#1c2148;--bg4:#272d5a;
+  --accent:#8b9cf7;--accent2:#6b7ee0;--accentBright:#a4b3ff;
+  --text:#e8eaf6;--text2:#8e93b8;--text3:#5a5f82;
+  --green:#4ade80;--red:#f87171;--orange:#fb923c;--cyan:#67e8f9;
+  --radius:14px;
+}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent}
+input,button,select,textarea{font-family:inherit;font-size:inherit}
+.app{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;padding-bottom:80px}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--bg4);display:flex;justify-content:center;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-inner{display:flex;max-width:520px;width:100%}
+.nav-btn{flex:1;padding:10px 0 8px;text-align:center;color:var(--text3);font-size:11px;font-weight:500;cursor:pointer;border:none;background:none;transition:.15s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{display:block;margin:0 auto 3px;width:22px;height:22px}
+
+/* HEADER */
+.header{padding:18px 20px 8px;display:flex;align-items:center;gap:12px}
+.logo-mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:24px;height:24px;color:#fff}
+.logo-text{font-size:24px;font-weight:900;letter-spacing:3px;color:var(--accentBright)}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:2px;font-weight:600}
+.back-btn{background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer;padding:4px 8px}
+
+/* LOGIN */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:40px 20px;text-align:center}
+.login-mark{width:96px;height:96px;border-radius:26px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;margin-bottom:26px;box-shadow:0 12px 40px rgba(107,126,224,.35)}
+.login-mark svg{width:52px;height:52px;color:#fff}
+.login-title{font-size:44px;font-weight:900;letter-spacing:8px;color:var(--accentBright);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text3);letter-spacing:3px;margin-bottom:48px}
+.google-btn{display:flex;align-items:center;gap:12px;background:#fff;color:#333;border:none;border-radius:50px;padding:14px 32px;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:.15s}
+.google-btn:active{transform:scale(.97)}
+.google-btn svg{width:20px;height:20px}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;gap:16px;color:var(--text2)}
+.spinner{width:36px;height:36px;border:3px solid var(--bg4);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SECTIONS */
+.section-title{font-size:12px;color:var(--text3);font-weight:600;margin:18px 20px 8px;letter-spacing:1.5px}
+
+/* START CARD */
+.start-card{background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--radius);margin:12px 16px;padding:20px}
+.start-card h2{font-size:18px;font-weight:800;margin-bottom:4px}
+.start-card p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:16px}
+.date-bar{display:flex;align-items:center;gap:10px}
+.date-bar label{font-size:13px;color:var(--text2);font-weight:600;white-space:nowrap}
+.date-input{flex:1;background:var(--bg3);border:1px solid var(--bg4);border-radius:10px;padding:11px 14px;color:var(--text);font-size:15px;text-align:center;outline:none;-webkit-appearance:none;transition:.15s}
+.date-input:focus{border-color:var(--accent)}
+.primary-btn{width:100%;padding:14px;margin-top:16px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(107,126,224,.3);letter-spacing:.5px}
+.primary-btn:active{transform:scale(.98)}
+.primary-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+
+/* WORKOUT TOP BAR */
+.wk-top{display:flex;align-items:center;gap:10px;padding:8px 16px 4px}
+.wk-date{flex:1;background:var(--bg3);border:1px solid var(--bg4);border-radius:10px;padding:9px 12px;color:var(--text);font-size:14px;text-align:center;outline:none;-webkit-appearance:none}
+.wk-date:focus{border-color:var(--accent)}
+.wk-discard{background:none;border:1px solid var(--bg4);color:var(--text3);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.wk-discard:active{border-color:var(--red);color:var(--red)}
+
+/* EXERCISE CARD */
+.ex-card{background:var(--bg2);border-radius:var(--radius);margin:8px 16px;border:1px solid var(--bg4);overflow:hidden}
+.ex-head{padding:14px 16px;display:flex;align-items:flex-start;gap:10px}
+.ex-type-tag{font-size:10px;font-weight:800;padding:3px 8px;border-radius:50px;flex-shrink:0;letter-spacing:.5px}
+.ex-type-tag.weight{background:rgba(139,156,247,.16);color:var(--accent)}
+.ex-type-tag.time{background:rgba(103,232,249,.14);color:var(--cyan)}
+.ex-title{flex:1;font-size:16px;font-weight:700;line-height:1.4}
+.ex-remove{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0}
+.ex-remove:active{color:var(--red)}
+
+.ex-plan{padding:0 16px 6px;display:flex;flex-wrap:wrap;gap:8px}
+.plan-field{flex:1;min-width:90px}
+.plan-field label{display:block;font-size:10px;color:var(--text3);font-weight:600;margin-bottom:3px;letter-spacing:.3px}
+.plan-input{width:100%;background:var(--bg3);border:1px solid var(--bg4);border-radius:9px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;transition:.15s}
+.plan-input:focus{border-color:var(--accent)}
+.plan-input::placeholder{color:var(--text3)}
+
+.last-perf{margin:6px 16px 2px;padding:8px 12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);border-radius:10px;font-size:12px;color:var(--green);font-weight:600;line-height:1.5}
+.last-perf .lp-date{color:var(--text2);font-weight:500;font-size:11px}
+
+.sets-wrap{padding:8px 16px 14px;border-top:1px solid var(--bg4);margin-top:6px}
+.sets-head{display:flex;gap:6px;padding:0 0 2px}
+.sets-head span{font-size:10px;color:var(--text3);font-weight:600;text-align:center;letter-spacing:.3px}
+.set-row{display:flex;align-items:center;gap:6px;margin-top:8px}
+.set-num{min-width:24px;font-size:12px;color:var(--text3);font-weight:700;text-align:center}
+.set-input{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--bg4);border-radius:10px;padding:10px 8px;color:var(--text);font-size:15px;text-align:center;outline:none;-webkit-appearance:none;transition:.15s}
+.set-input:focus{border-color:var(--accent)}
+.set-input::placeholder{color:var(--text3)}
+.set-notes-input{flex:2;min-width:0;text-align:right;font-size:13px}
+.set-del{background:none;border:none;color:var(--text3);font-size:15px;cursor:pointer;padding:6px;width:30px}
+.set-del:active{color:var(--red)}
+.add-row-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;margin-top:10px;background:var(--bg3);border:1px dashed var(--bg4);border-radius:10px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.add-row-btn:active{background:var(--bg4);border-color:var(--accent)}
+
+/* ADD EXERCISE */
+.add-ex-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);margin:12px 16px;padding:14px;background:var(--bg2);border:1px dashed var(--accent2);border-radius:var(--radius);color:var(--accent);font-size:15px;font-weight:700;cursor:pointer;transition:.15s}
+.add-ex-btn:active{background:var(--bg3)}
+
+.finish-bar{position:fixed;bottom:60px;left:0;right:0;padding:10px 16px;z-index:99}
+.finish-inner{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.save-status{font-size:13px;font-weight:700;white-space:nowrap}
+.finish-btn{flex:1;padding:14px;background:linear-gradient(135deg,var(--green),#22c55e);color:#06240f;border:none;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 4px 24px rgba(74,222,128,.25);letter-spacing:.5px}
+.finish-btn:active{transform:scale(.98)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,10,25,.7);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--bg2);border-top-left-radius:22px;border-top-right-radius:22px;width:100%;max-width:520px;max-height:82vh;display:flex;flex-direction:column;border:1px solid var(--bg4);border-bottom:none}
+.modal-head{padding:18px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bg4)}
+.modal-head h3{font-size:17px;font-weight:800}
+.modal-close{background:none;border:none;color:var(--text3);font-size:24px;cursor:pointer;line-height:1;padding:0 4px}
+.modal-body{overflow-y:auto;padding:12px 16px 24px}
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--bg4);border-radius:12px;padding:12px 14px;color:var(--text);font-size:15px;outline:none;margin-bottom:10px}
+.search-box:focus{border-color:var(--accent)}
+.pick-row{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--bg3);border:1px solid var(--bg4);border-radius:11px;margin-bottom:7px;cursor:pointer;transition:.12s}
+.pick-row:active{background:var(--bg4);border-color:var(--accent)}
+.pick-name{flex:1;font-size:15px;font-weight:600}
+.new-ex-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--bg4)}
+.new-ex-block .nb-label{font-size:12px;color:var(--text3);font-weight:600;margin-bottom:8px}
+.type-toggle{display:flex;border-radius:50px;overflow:hidden;background:var(--bg3);border:1px solid var(--bg4);margin-top:8px}
+.type-toggle button{flex:1;padding:11px;border:none;background:transparent;color:var(--text3);font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.type-toggle button.active{background:var(--accent2);color:#fff}
+
+/* HISTORY */
+.empty{text-align:center;padding:70px 24px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:14px}
+.empty .e-title{font-size:15px;color:var(--text2);font-weight:600;margin-bottom:4px}
+.hist-card{background:var(--bg2);border-radius:var(--radius);margin:8px 16px;border:1px solid var(--bg4);overflow:hidden}
+.hist-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.hist-date{font-size:15px;font-weight:700;color:var(--accentBright)}
+.hist-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.hist-right{display:flex;align-items:center;gap:8px}
+.hist-chevron{color:var(--text3);font-size:15px}
+.hist-del{background:none;border:none;color:var(--text3);font-size:15px;cursor:pointer;padding:4px}
+.hist-del:active{color:var(--red)}
+.hist-body{padding:2px 16px 14px;border-top:1px solid var(--bg4)}
+.hist-ex{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.hist-ex:last-child{border-bottom:none}
+.hist-ex-name{font-size:14px;font-weight:700}
+.hist-ex-name .he-var{color:var(--accent);font-weight:600;font-size:12px}
+.hist-ex-plan{font-size:11px;color:var(--text3);margin-top:1px}
+.hist-set{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.6}
+.hist-set b{color:var(--text);font-weight:700}
+.hist-note{color:var(--text3);font-style:italic;font-size:11px}
+
+/* SETTINGS */
+.set-section{padding:8px 16px}
+.info-card{background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.info-card .ic-head{display:flex;align-items:center;gap:10px}
+.info-card .ic-head img{width:36px;height:36px;border-radius:50%}
+.info-card strong{font-size:14px}
+.info-card .ic-mail{font-size:11px;color:var(--text3)}
+.cat-card{background:var(--bg2);border:1px solid var(--bg4);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.cat-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.cat-head h3{font-size:15px;font-weight:700;color:var(--accent)}
+.cat-body{padding:0 16px 12px}
+.cat-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--bg4)}
+.cat-row .cr-name{flex:1;font-size:14px;font-weight:600}
+.cat-row .cr-del{background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:4px}
+.cat-row .cr-del:active{color:var(--red)}
+.ghost-btn{width:100%;padding:12px;background:var(--bg3);border:1px solid var(--bg4);border-radius:12px;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+.ghost-btn:active{background:var(--bg4)}
+.export-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px}
+.export-btn:active{transform:scale(.98)}
+.signout-btn{width:100%;padding:12px;background:none;border:1px solid var(--bg4);color:var(--text3);border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;margin-top:20px}
+.signout-btn:active{border-color:var(--red);color:var(--red)}
+
+/* TOAST */
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:var(--green);color:#06240f;padding:11px 26px;border-radius:50px;font-size:14px;font-weight:700;z-index:300;animation:fadeInOut 2.6s ease;pointer-events:none;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.toast.error{background:var(--red);color:#2a0707}
+@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}12%{opacity:1;transform:translateX(-50%) translateY(0)}85%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+.config-warn{margin:16px;padding:16px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.35);border-radius:var(--radius);color:var(--orange);font-size:13px;line-height:1.7}
+.config-warn code{background:rgba(0,0,0,.3);padding:1px 6px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// =====================================================
+//  FIREBASE CONFIG  —  ⚠️ החליפי את הבלוק הזה בלבד  ⚠️
+//  (Project settings → General → Your apps → SDK config)
+// =====================================================
+var firebaseConfig = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_PROJECT.firebaseapp.com",
+  projectId: "PASTE_PROJECT_ID",
+  storageBucket: "PASTE_PROJECT.firebasestorage.app",
+  messagingSenderId: "PASTE_SENDER_ID",
+  appId: "PASTE_APP_ID"
+};
+// =====================================================
+
+var FB_READY = firebaseConfig.apiKey.indexOf("PASTE_") !== 0;
+var auth, db;
+if (FB_READY) {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+}
+
+// ===== Default exercise catalog (seeded on first login) =====
+var DEFAULT_EXERCISES = [
+  // משקל
+  ["סקוואט","weight"],["דדליפט","weight"],["לחיצת חזה","weight"],
+  ["לחיצת כתפיים","weight"],["חתירת מוט","weight"],["חתירה בכבל","weight"],
+  ["מתח","weight"],["שכיבות סמיכה","weight"],["מקבילים","weight"],
+  ["לאנג'ים","weight"],["היפ ת'רסט","weight"],["גובלט סקוואט","weight"],
+  ["סווינג קטלבל","weight"],["כפיפת מרפקים (יד דו ראשי)","weight"],
+  ["פשיטת מרפקים (יד תלת ראשי)","weight"],["מכרעים (step-up)","weight"],
+  ["לחיצת רגליים","weight"],["פשיטת ברך","weight"],["כפיפת ברך","weight"],
+  ["פולאובר","weight"],
+  // זמן
+  ["פלאנק","time"],["ישיבת קיר","time"],["תליה במוט","time"],
+  ["הליכת חוואי","time"],["ריצה","time"],["אופני כושר","time"],
+  ["מכונת חתירה","time"],["קפיצה בחבל","time"],["הליכון","time"],
+  ["אליפטיקל","time"]
+];
+
+// ===== DB helpers (all data scoped to users/{uid}) =====
+var DB = {
+  exCol: function(uid){ return db.collection("users").doc(uid).collection("exercises"); },
+  wkCol: function(uid){ return db.collection("users").doc(uid).collection("workouts"); },
+  loadExercises: function(uid){
+    return DB.exCol(uid).orderBy("name").get().then(function(s){ return s.docs.map(function(d){return d.data();}); });
+  },
+  seedExercises: function(uid){
+    var batch = db.batch();
+    DEFAULT_EXERCISES.forEach(function(e, i){
+      var id = "ex_" + Date.now() + "_" + i;
+      batch.set(DB.exCol(uid).doc(id), {id:id, name:e[0], type:e[1], createdAt:new Date().toISOString()});
+    });
+    return batch.commit();
+  },
+  addExercise: function(uid, ex){ return DB.exCol(uid).doc(ex.id).set(ex); },
+  deleteExercise: function(uid, id){ return DB.exCol(uid).doc(id).delete(); },
+  loadWorkouts: function(uid){
+    return DB.wkCol(uid).orderBy("date","desc").limit(300).get().then(function(s){ return s.docs.map(function(d){return d.data();}); });
+  },
+  saveWorkout: function(uid, w){ return DB.wkCol(uid).doc(w.id).set(w); },
+  deleteWorkout: function(uid, id){ return DB.wkCol(uid).doc(id).delete(); },
+  saveProfile: function(uid, data){ return db.collection("users").doc(uid).set(data, {merge:true}); }
+};
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+function GoogleLogo(){
+  return <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>;
+}
+function DumbbellIcon(){
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l7-7M14 21l7-7"/></svg>;
+}
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function todayStr(){ return new Date().toISOString().split("T")[0]; }
+function fmtDate(d){
+  if(!d) return "";
+  var p = d.split("-");
+  if(p.length!==3) return d;
+  var days=["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
+  var dt = new Date(d+"T00:00:00");
+  return p[2]+"."+p[1]+"."+p[0]+" · יום "+days[dt.getDay()];
+}
+
+// Find the most recent previous performance of an exercise (by id), excluding current workout.
+function getLastPerf(exId, workouts, excludeWid){
+  for(var i=0;i<workouts.length;i++){
+    var w = workouts[i];
+    if(w.id===excludeWid) continue;
+    var match = (w.exercises||[]).find(function(e){
+      return e.exId===exId && (e.sets||[]).some(function(s){ return s.value || s.reps; });
+    });
+    if(match) return { date:w.date, type:match.type, sets:match.sets };
+  }
+  return null;
+}
+function summarizeSets(sets, type){
+  return (sets||[]).filter(function(s){ return s.value||s.reps; }).map(function(s){
+    var v = s.value ? (type==="weight" ? s.value+" ק״ג" : s.value) : "";
+    var r = s.reps ? " × "+s.reps : "";
+    return (v+r).trim();
+  }).filter(Boolean).join("  ·  ");
+}
+
+function App(){
+  const [user, setUser] = useState(undefined); // undefined=loading, null=out
+  const [tab, setTab] = useState("home");
+  const [toast, setToast] = useState(null);
+
+  const [exercises, setExercises] = useState([]);
+  const [workouts, setWorkouts] = useState([]); // done, newest first
+  const [active, setActive] = useState(null);    // in-progress workout or null
+  const [dataReady, setDataReady] = useState(false);
+
+  const [startDate, setStartDate] = useState(todayStr());
+  const [showAddEx, setShowAddEx] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("saved"); // saving | saved | error
+  const [openHist, setOpenHist] = useState({});
+  const [catOpen, setCatOpen] = useState(false);
+
+  const saveTimer = useRef(null);
+  const skipSave = useRef(false);
+
+  const flash = (msg, err) => { setToast({msg, err}); setTimeout(()=>setToast(null), 2600); };
+
+  // Auth listener
+  useEffect(() => {
+    if(!FB_READY){ setUser(null); return; }
+    return auth.onAuthStateChanged(function(u){
+      if(u){
+        DB.saveProfile(u.uid, {email:u.email, displayName:u.displayName, photoURL:u.photoURL, lastLogin:new Date().toISOString()});
+        setUser(u);
+      } else { setUser(null); }
+    });
+  }, []);
+
+  // Load data on login
+  useEffect(() => {
+    if(!user) return;
+    setDataReady(false);
+    DB.loadExercises(user.uid).then(function(list){
+      if(!list.length){
+        return DB.seedExercises(user.uid).then(function(){ return DB.loadExercises(user.uid); });
+      }
+      return list;
+    }).then(function(list){
+      setExercises(list);
+      return DB.loadWorkouts(user.uid);
+    }).then(function(all){
+      var act = all.find(function(w){ return w.status==="active"; }) || null;
+      setActive(act);
+      setWorkouts(all.filter(function(w){ return w.status==="done"; }));
+      if(act) skipSave.current = true;
+      setDataReady(true);
+    }).catch(function(err){ console.error(err); flash("שגיאה בטעינת הנתונים", true); setDataReady(true); });
+  }, [user]);
+
+  const signIn = () => {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(function(err){ flash("שגיאה בהתחברות: "+err.message, true); });
+  };
+  const signOut = () => { auth.signOut(); setActive(null); setWorkouts([]); setExercises([]); setTab("home"); };
+
+  // ---- Active workout autosave ----
+  useEffect(() => {
+    if(!active || !user) return;
+    if(skipSave.current){ skipSave.current = false; setSaveStatus("saved"); return; }
+    setSaveStatus("saving");
+    if(saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(function(){
+      DB.saveWorkout(user.uid, active)
+        .then(function(){ setSaveStatus("saved"); })
+        .catch(function(e){ console.error(e); setSaveStatus("error"); });
+    }, 700);
+  }, [active]);
+
+  // ---- Workout lifecycle ----
+  const startWorkout = () => {
+    var w = { id:"w_"+Date.now(), date:startDate, status:"active", exercises:[], createdAt:new Date().toISOString() };
+    setActive(w);
+  };
+  const discardWorkout = async () => {
+    if(!active) return;
+    if(!confirm("לבטל את האימון הנוכחי? כל מה שהוזן יימחק.")) return;
+    try{ await DB.deleteWorkout(user.uid, active.id); }catch(e){ console.error(e); }
+    setActive(null);
+    flash("האימון בוטל");
+  };
+  const finishWorkout = async () => {
+    if(!active) return;
+    var hasData = (active.exercises||[]).some(function(e){ return (e.sets||[]).some(function(s){ return s.value||s.reps; }); });
+    if(!hasData){ flash("אין מה לשמור — לא הוזנו ביצועים", true); return; }
+    if(saveTimer.current) clearTimeout(saveTimer.current);
+    var done = Object.assign({}, active, {status:"done", finishedAt:new Date().toISOString()});
+    try{
+      await DB.saveWorkout(user.uid, done);
+      setWorkouts(function(p){ return [done, ...p.filter(function(w){return w.id!==done.id;})].sort(function(a,b){return a.date<b.date?1:-1;}); });
+      setActive(null);
+      setShowAddEx(false);
+      flash("האימון נשמר! 💪");
+      setTab("history");
+    }catch(e){ console.error(e); flash("שגיאה בשמירה", true); }
+  };
+
+  // ---- Exercise / set editing (immutable updates on active) ----
+  const addExerciseToWorkout = (cat) => {
+    setActive(function(p){
+      var n = JSON.parse(JSON.stringify(p));
+      n.exercises.push({ _k:uid(), exId:cat.id, name:cat.name, type:cat.type, variation:"", repRange:"", notes:"", sets:[{ _k:uid(), value:"", reps:"", notes:"" }] });
+      return n;
+    });
+    setShowAddEx(false);
+  };
+  const removeExercise = (ei) => {
+    setActive(function(p){ var n=JSON.parse(JSON.stringify(p)); n.exercises.splice(ei,1); return n; });
+  };
+  const updateExField = (ei, field, val) => {
+    setActive(function(p){ var n=JSON.parse(JSON.stringify(p)); n.exercises[ei][field]=val; return n; });
+  };
+  const addSet = (ei) => {
+    setActive(function(p){
+      var n=JSON.parse(JSON.stringify(p));
+      var sets=n.exercises[ei].sets; var last=sets[sets.length-1]||{value:"",reps:""};
+      sets.push({ _k:uid(), value:last.value||"", reps:"", notes:"" });
+      return n;
+    });
+  };
+  const updateSet = (ei, si, field, val) => {
+    setActive(function(p){ var n=JSON.parse(JSON.stringify(p)); n.exercises[ei].sets[si][field]=val; return n; });
+  };
+  const removeSet = (ei, si) => {
+    setActive(function(p){
+      var n=JSON.parse(JSON.stringify(p));
+      n.exercises[ei].sets.splice(si,1);
+      if(!n.exercises[ei].sets.length) n.exercises[ei].sets.push({ _k:uid(), value:"", reps:"", notes:"" });
+      return n;
+    });
+  };
+
+  // ---- Catalog: add new exercise (also adds to current workout) ----
+  const createExercise = async (name, type, addToWorkout) => {
+    name = (name||"").trim();
+    if(!name) return;
+    var existing = exercises.find(function(e){ return e.name.trim()===name; });
+    var ex = existing || { id:"ex_"+Date.now(), name:name, type:type, createdAt:new Date().toISOString() };
+    if(!existing){
+      try{ await DB.addExercise(user.uid, ex); setExercises(function(p){ return [...p, ex].sort(function(a,b){return a.name>b.name?1:-1;}); }); }
+      catch(e){ console.error(e); flash("שגיאה בהוספת תרגיל", true); return; }
+    }
+    if(addToWorkout) addExerciseToWorkout(ex);
+  };
+  const deleteCatExercise = async (id) => {
+    if(!confirm("למחוק את התרגיל מהמאגר? (אימונים קודמים לא יושפעו)")) return;
+    try{ await DB.deleteExercise(user.uid, id); setExercises(function(p){ return p.filter(function(e){return e.id!==id;}); }); flash("נמחק מהמאגר"); }
+    catch(e){ console.error(e); flash("שגיאה", true); }
+  };
+
+  // ---- CSV export ----
+  const exportCsv = () => {
+    if(!workouts.length){ flash("אין אימונים לייצוא", true); return; }
+    var head = ["תאריך","תרגיל","סוג","וריאציה","טווח חזרות","הערות תרגיל","סט","משקל/זמן","חזרות","הערות סט"];
+    var rows = [head];
+    workouts.forEach(function(w){
+      (w.exercises||[]).forEach(function(ex){
+        var typeHe = ex.type==="time" ? "זמן" : "משקל";
+        (ex.sets||[]).forEach(function(s, si){
+          if(!(s.value||s.reps||s.notes)) return;
+          rows.push([w.date, ex.name, typeHe, ex.variation||"", ex.repRange||"", ex.notes||"", si+1, s.value||"", s.reps||"", s.notes||""]);
+        });
+      });
+    });
+    var esc = function(v){ v=String(v==null?"":v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+    var csv = "\uFEFF" + rows.map(function(r){ return r.map(esc).join(","); }).join("\n");
+    var blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "workout-log-"+todayStr()+".csv";
+    a.click();
+    flash("הקובץ ירד 📥");
+  };
+
+  // =================== RENDER ===================
+  if(!FB_READY) return <ConfigWarning />;
+  if(user===undefined) return <div className="loading-screen"><div className="spinner"></div><div>טוען…</div></div>;
+
+  if(!user) return (
+    <div className="login-screen">
+      <div className="login-mark"><DumbbellIcon/></div>
+      <div className="login-title">LOG</div>
+      <div className="login-sub">יומן אימונים</div>
+      <button className="google-btn" onClick={signIn}><GoogleLogo/> התחברות עם Google</button>
+    </div>
+  );
+
+  if(!dataReady) return <div className="loading-screen"><div className="spinner"></div><div>טוען את הנתונים שלך…</div></div>;
+
+  return (
+    <div className="app">
+      {toast && <div className={"toast"+(toast.err?" error":"")}>{toast.msg}</div>}
+
+      {/* ===== HOME ===== */}
+      {tab==="home" && <div>
+        <div className="header">
+          <div className="logo-mark"><DumbbellIcon/></div>
+          <div><div className="logo-text">LOG</div><div className="logo-sub">יומן אימונים</div></div>
+        </div>
+
+        {!active ? (
+          <div className="start-card">
+            <h2>אימון חדש</h2>
+            <p>בחרי תאריך והתחילי. כל מה שתזיני יישמר אוטומטית — אפשר לצאת ולחזור בלי לאבד כלום.</p>
+            <div className="date-bar">
+              <label>📅 תאריך</label>
+              <input className="date-input" type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} />
+            </div>
+            <button className="primary-btn" onClick={startWorkout}>התחלת אימון</button>
+          </div>
+        ) : (
+          <div>
+            <div className="wk-top">
+              <input className="wk-date" type="date" value={active.date} onChange={e=>setActive(p=>Object.assign({},p,{date:e.target.value}))} />
+              <button className="wk-discard" onClick={discardWorkout}>בטל אימון</button>
+            </div>
+
+            {active.exercises.map((ex, ei) => {
+              var lp = getLastPerf(ex.exId, workouts, active.id);
+              return <div className="ex-card" key={ex._k}>
+                <div className="ex-head">
+                  <span className={"ex-type-tag "+ex.type}>{ex.type==="time"?"זמן":"משקל"}</span>
+                  <div className="ex-title">{ex.name}</div>
+                  <button className="ex-remove" onClick={()=>removeExercise(ei)}>✕</button>
+                </div>
+                <div className="ex-plan">
+                  <div className="plan-field" style={{flex:"1 1 100%"}}>
+                    <label>וריאציה</label>
+                    <input className="plan-input" value={ex.variation} placeholder="לדוגמה: אחיזה רחבה, טמפו 3-1-1" onChange={e=>updateExField(ei,"variation",e.target.value)} />
+                  </div>
+                  <div className="plan-field">
+                    <label>טווח חזרות (יעד)</label>
+                    <input className="plan-input" value={ex.repRange} placeholder="8-12" onChange={e=>updateExField(ei,"repRange",e.target.value)} />
+                  </div>
+                  <div className="plan-field">
+                    <label>הערות לתרגיל</label>
+                    <input className="plan-input" value={ex.notes} placeholder="הערה כללית…" onChange={e=>updateExField(ei,"notes",e.target.value)} />
+                  </div>
+                </div>
+
+                {lp && <div className="last-perf">
+                  📊 פעם קודמת <span className="lp-date">({fmtDate(lp.date).split(" · ")[0]})</span><br/>
+                  {summarizeSets(lp.sets, lp.type) || "—"}
+                </div>}
+
+                <div className="sets-wrap">
+                  <div className="sets-head">
+                    <span style={{minWidth:24}}></span>
+                    <span style={{flex:1}}>{ex.type==="time"?"זמן":"משקל (ק״ג)"}</span>
+                    <span style={{flex:1}}>חזרות</span>
+                    <span style={{flex:2}}>הערות</span>
+                    <span style={{width:30}}></span>
+                  </div>
+                  {ex.sets.map((s, si) => (
+                    <div className="set-row" key={s._k}>
+                      <div className="set-num">{si+1}</div>
+                      {ex.type==="time"
+                        ? <input className="set-input" style={{flex:1}} type="text" inputMode="numeric" placeholder="01:00" value={s.value} onChange={e=>updateSet(ei,si,"value",e.target.value)} />
+                        : <input className="set-input" style={{flex:1}} type="number" inputMode="decimal" placeholder="ק״ג" value={s.value} onChange={e=>updateSet(ei,si,"value",e.target.value)} />}
+                      <input className="set-input" style={{flex:1}} type="number" inputMode="numeric" placeholder="חז'" value={s.reps} onChange={e=>updateSet(ei,si,"reps",e.target.value)} />
+                      <input className="set-input set-notes-input" type="text" placeholder="הערה…" value={s.notes} onChange={e=>updateSet(ei,si,"notes",e.target.value)} />
+                      <button className="set-del" onClick={()=>removeSet(ei,si)}>✕</button>
+                    </div>
+                  ))}
+                  <button className="add-row-btn" onClick={()=>addSet(ei)}>+ שורת ביצוע</button>
+                </div>
+              </div>;
+            })}
+
+            <button className="add-ex-btn" onClick={()=>setShowAddEx(true)}>+ הוספת תרגיל</button>
+          </div>
+        )}
+      </div>}
+
+      {/* ===== HISTORY ===== */}
+      {tab==="history" && <div>
+        <div className="header">
+          <div className="logo-mark"><DumbbellIcon/></div>
+          <div className="logo-text" style={{fontSize:22}}>היסטוריה</div>
+        </div>
+        {!workouts.length ? (
+          <div className="empty"><div className="empty-icon">📋</div><div className="e-title">עדיין אין אימונים שמורים</div><div>סיימי אימון ראשון והוא יופיע כאן</div></div>
+        ) : workouts.map(function(w){
+          var open = openHist[w.id];
+          var exCount = (w.exercises||[]).length;
+          return <div className="hist-card" key={w.id}>
+            <div className="hist-head" onClick={()=>setOpenHist(p=>Object.assign({},p,{[w.id]:!p[w.id]}))}>
+              <div>
+                <div className="hist-date">{fmtDate(w.date)}</div>
+                <div className="hist-meta">{exCount+" תרגילים"}</div>
+              </div>
+              <div className="hist-right">
+                <button className="hist-del" onClick={async(e)=>{e.stopPropagation(); if(!confirm("למחוק את האימון?"))return; try{await DB.deleteWorkout(user.uid,w.id); setWorkouts(p=>p.filter(x=>x.id!==w.id)); flash("נמחק");}catch(err){flash("שגיאה",true);}}}>🗑</button>
+                <span className="hist-chevron">{open?"▾":"◂"}</span>
+              </div>
+            </div>
+            {open && <div className="hist-body">
+              {(w.exercises||[]).map(function(ex, i){
+                return <div className="hist-ex" key={i}>
+                  <div className="hist-ex-name">{ex.name}{ex.variation && <span className="he-var">{" · "+ex.variation}</span>}</div>
+                  {(ex.repRange||ex.notes) && <div className="hist-ex-plan">{[ex.repRange?"יעד "+ex.repRange:"", ex.notes].filter(Boolean).join(" · ")}</div>}
+                  {(ex.sets||[]).filter(function(s){return s.value||s.reps||s.notes;}).map(function(s, si){
+                    return <div className="hist-set" key={si}>
+                      <b>{si+1}.</b> {s.value?(ex.type==="time"?s.value:s.value+" ק״ג"):""}{s.reps?" × "+s.reps:""}
+                      {s.notes && <span className="hist-note">{"  — "+s.notes}</span>}
+                    </div>;
+                  })}
+                </div>;
+              })}
+            </div>}
+          </div>;
+        })}
+      </div>}
+
+      {/* ===== SETTINGS ===== */}
+      {tab==="settings" && <div>
+        <div className="header">
+          <div className="logo-mark"><DumbbellIcon/></div>
+          <div className="logo-text" style={{fontSize:22}}>הגדרות</div>
+        </div>
+        <div className="set-section">
+          <div className="info-card">
+            <div className="ic-head">
+              {user.photoURL && <img src={user.photoURL} onError={e=>{e.target.style.display='none';}} />}
+              <div><strong>{user.displayName}</strong><div className="ic-mail">{user.email}</div></div>
+            </div>
+          </div>
+
+          <div className="cat-card">
+            <div className="cat-head" onClick={()=>setCatOpen(p=>!p)}>
+              <h3>🗂️ מאגר התרגילים ({exercises.length})</h3>
+              <span style={{color:"var(--text3)",fontSize:16}}>{catOpen?"▾":"◂"}</span>
+            </div>
+            {catOpen && <div className="cat-body">
+              <NewCatRow onCreate={(name,type)=>createExercise(name,type,false)} />
+              {exercises.map(function(e){
+                return <div className="cat-row" key={e.id}>
+                  <span className={"ex-type-tag "+e.type}>{e.type==="time"?"זמן":"משקל"}</span>
+                  <span className="cr-name">{e.name}</span>
+                  <button className="cr-del" onClick={()=>deleteCatExercise(e.id)}>🗑</button>
+                </div>;
+              })}
+            </div>}
+          </div>
+
+          <button className="export-btn" onClick={exportCsv}>📥 ייצוא כל האימונים ל-CSV</button>
+          <div style={{fontSize:11,color:"var(--text3)",textAlign:"center",marginTop:10,lineHeight:1.6}}>
+            {workouts.length+" אימונים שמורים בענן · נגיש מכל מכשיר שתתחברי בו"}
+          </div>
+
+          <button className="signout-btn" onClick={signOut}>התנתקות</button>
+        </div>
+      </div>}
+
+      {/* ===== ADD EXERCISE MODAL ===== */}
+      {showAddEx && active && <AddExerciseModal
+        exercises={exercises}
+        onPick={addExerciseToWorkout}
+        onCreate={(name,type)=>createExercise(name,type,true)}
+        onClose={()=>setShowAddEx(false)}
+      />}
+
+      {/* ===== FINISH BAR ===== */}
+      {tab==="home" && active && (active.exercises||[]).some(e=>(e.sets||[]).some(s=>s.value||s.reps)) && (
+        <div className="finish-bar"><div className="finish-inner">
+          <div className="save-status">
+            {saveStatus==="saving" && <span style={{color:"var(--text2)"}}>שומר…</span>}
+            {saveStatus==="saved" && <span style={{color:"var(--green)"}}>✓ נשמר</span>}
+            {saveStatus==="error" && <span style={{color:"var(--red)"}}>⚠ שגיאה</span>}
+          </div>
+          <button className="finish-btn" onClick={finishWorkout}>סוף אימון</button>
+        </div></div>
+      )}
+
+      {/* ===== NAV ===== */}
+      <div className="nav"><div className="nav-inner">
+        <button className={"nav-btn"+(tab==="home"?" active":"")} onClick={()=>setTab("home")}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>אימון
+        </button>
+        <button className={"nav-btn"+(tab==="history"?" active":"")} onClick={()=>setTab("history")}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>היסטוריה
+        </button>
+        <button className={"nav-btn"+(tab==="settings"?" active":"")} onClick={()=>setTab("settings")}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>הגדרות
+        </button>
+      </div></div>
+    </div>
+  );
+}
+
+// ---- New-exercise row used inside catalog settings ----
+function NewCatRow({onCreate}){
+  const [name, setName] = useState("");
+  const [type, setType] = useState("weight");
+  return <div style={{marginBottom:10}}>
+    <input className="search-box" style={{marginBottom:8}} placeholder="הוספת תרגיל חדש למאגר…" value={name} onChange={e=>setName(e.target.value)} />
+    <div className="type-toggle">
+      <button className={type==="weight"?"active":""} onClick={()=>setType("weight")}>משקל</button>
+      <button className={type==="time"?"active":""} onClick={()=>setType("time")}>זמן</button>
+    </div>
+    <button className="ghost-btn" disabled={!name.trim()} onClick={()=>{ if(name.trim()){ onCreate(name,type); setName(""); } }}>+ הוספה למאגר</button>
+  </div>;
+}
+
+// ---- Add-exercise bottom sheet ----
+function AddExerciseModal({exercises, onPick, onCreate, onClose}){
+  const [q, setQ] = useState("");
+  const [newType, setNewType] = useState("weight");
+  const ql = q.trim().toLowerCase();
+  const filtered = exercises.filter(function(e){ return !ql || e.name.toLowerCase().indexOf(ql)>=0; });
+  const exactExists = exercises.some(function(e){ return e.name.trim()===q.trim(); });
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-head">
+          <h3>הוספת תרגיל</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          <input className="search-box" autoFocus placeholder="🔍 חיפוש תרגיל…" value={q} onChange={e=>setQ(e.target.value)} />
+          {filtered.map(function(e){
+            return <div className="pick-row" key={e.id} onClick={()=>onPick(e)}>
+              <span className={"ex-type-tag "+e.type}>{e.type==="time"?"זמן":"משקל"}</span>
+              <span className="pick-name">{e.name}</span>
+              <span style={{color:"var(--accent)",fontSize:18}}>+</span>
+            </div>;
+          })}
+          {q.trim() && !exactExists && <div className="new-ex-block">
+            <div className="nb-label">לא נמצא — להוסיף את "{q.trim()}" כתרגיל חדש?</div>
+            <div className="type-toggle">
+              <button className={newType==="weight"?"active":""} onClick={()=>setNewType("weight")}>משקל</button>
+              <button className={newType==="time"?"active":""} onClick={()=>setNewType("time")}>זמן</button>
+            </div>
+            <button className="ghost-btn" onClick={()=>onCreate(q.trim(), newType)}>+ צרי והוסיפי לאימון</button>
+          </div>}
+          {!filtered.length && !q.trim() && <div style={{textAlign:"center",color:"var(--text3)",padding:"20px"}}>המאגר ריק — הקלידי שם כדי להוסיף תרגיל</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Config warning (shown until Firebase config is pasted) ----
+function ConfigWarning(){
+  return <div className="app"><div className="header">
+      <div className="logo-mark"><DumbbellIcon/></div>
+      <div><div className="logo-text">LOG</div><div className="logo-sub">יומן אימונים</div></div>
+    </div>
+    <div className="config-warn">
+      <strong>⚙️ צריך עוד שלב אחד קטן</strong><br/><br/>
+      פתחי את <code>index.html</code> והדביקי את פרטי ה-Firebase של הפרויקט החדש שלך בתוך הבלוק <code>firebaseConfig</code> בראש הקובץ (Project settings ← General ← Your apps ← SDK setup and configuration ← Config).<br/><br/>
+      ברגע שתחליפי את שורות ה-<code>PASTE_…</code> בערכים האמיתיים, האפליקציה תעלה אוטומטית.
+    </div>
+  </div>;
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
+</script>
+
+<script>
+// Register service worker (PWA)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW failed:', e); });
+  });
+}
+</script>
+</body>
+</html>
